@@ -127,6 +127,8 @@ const P = {
   units: '<path d="M3 7h18M3 12h12M3 17h6"/>',
   heart: '<path d="M12 20.5s-7.5-4.6-9.2-9C1.5 8 3.6 4.5 7 4.5c2.1 0 3.5 1.2 5 3 1.5-1.8 2.9-3 5-3 3.4 0 5.5 3.5 4.2 7-1.7 4.4-9.2 9-9.2 9z" fill="currentColor" stroke="none"/>',
 };
+// Set by the iOS app's bridge (ios/FreeRope/bridge.js); Apple doesn't allow PayPal tips in apps.
+const NATIVE = window.FREEROPE_NATIVE || null;
 const DONATE = 'https://www.paypal.com/donate/?business=ramonmm3%40gmail.com&item_name=Help+FreeRope+reach+the+App+Store+and+Play+Store&currency_code=USD';
 const icon = (name, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${P[name]}</svg>`;
 const modeIcon = { FREE: 'infinity', TIMED: 'timer', TARGET: 'flag', INTERVAL: 'repeat' };
@@ -459,9 +461,9 @@ function renderProfile() {
     </div>
     <div class="group" style="margin-top:22px"><div class="row-item"><div class="tile" style="background:var(--indigo)">${icon('flask')}</div><span class="title">Demo Handle</span>${sw(handle.demo, 'demo')}</div></div>
     <div class="group-footer">Simulates a handle so you can try workouts without a rope.</div>
-    <div class="group" style="margin-top:22px"><a class="row-item" href="${DONATE}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="tile" style="background:var(--pink)">${icon('heart')}</div><span class="title">Support FreeRope</span><span class="value">PayPal</span></a></div>
-    <div class="group-footer">FreeRope costs nothing. Tips pay for the App Store ($99/year) and Play Store ($25) so it can be published properly and keep improving.</div>
-    <p class="center small muted" style="margin-top:28px;line-height:1.5">FreeRope for Web 1.5<br>Works with Crossrope AMP handles. Not affiliated with Crossrope.<br>Your workouts are stored only in this browser.</p>
+    ${NATIVE ? '' : `<div class="group" style="margin-top:22px"><a class="row-item" href="${DONATE}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="tile" style="background:var(--pink)">${icon('heart')}</div><span class="title">Support FreeRope</span><span class="value">PayPal</span></a></div>
+    <div class="group-footer">FreeRope costs nothing. Tips pay for the App Store ($99/year) and Play Store ($25) so it can be published properly and keep improving.</div>`}
+    <p class="center small muted" style="margin-top:28px;line-height:1.5">FreeRope ${NATIVE ? 'for iPhone' : 'for Web'} 1.5<br>Works with Crossrope AMP handles. Not affiliated with Crossrope.<br>Your workouts are stored only ${NATIVE ? 'on this phone' : 'in this browser'}.</p>
   </div></div>`;
 }
 

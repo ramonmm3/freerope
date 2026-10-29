@@ -1,0 +1,73 @@
+# Builds the iOS app on a GitHub Mac and uploads it to TestFlight.
+# Run it from the Actions tab (or `gh workflow run ios.yml`). Needs these repository secrets:
+#   APPLE_TEAM_ID   the 10-character Team ID from developer.apple.com/account
+#   ASC_KEY_ID      App Store Connect API key ID (Users and Access > Integrations, Admin role)
+#   ASC_ISSUER_ID   the Issuer ID shown above the keys
+#   ASC_KEY_P8      the contents of the downloaded AuthKey_XXXX.p8
+name: iOS TestFlight
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['ios-v*']
+
+jobs:
+  testflight:
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode and XcodeGen
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+          xcodebuild -version
+          brew install xcodegen
+
+      - name: Generate project
+        working-directory: ios
+        run: xcodegen
+
+      - name: Compile check (simulator, unsigned)
+        working-directory: ios
+        run: |
+          xcodebuild build -project FreeRope.xcodeproj -scheme FreeRope -configuration Debug             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO -quiet
+
+      - name: API key
+        if: env.TEAM_ID != ''
+        env:
+          KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          printf '%s\n' "$KEY_P8" > "$RUNNER_TEMP/keys/AuthKey_$KEY_ID.p8"
+          echo "KEY_PATH=$RUNNER_TEMP/keys/AuthKey_$KEY_ID.p8" >> "$GITHUB_ENV"
+
+      - name: Archive
+        if: env.TEAM_ID != ''
+        working-directory: ios
+        run: |
+          xcodebuild archive \
+            -project FreeRope.xcodeproj -scheme FreeRope -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/FreeRope.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+
+      - name: Upload to TestFlight
+        if: env.TEAM_ID != ''
+        working-directory: ios
+        run: |
+          /usr/libexec/PlistBuddy -c "Add :teamID string $TEAM_ID" ExportOptions.plist
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/FreeRope.xcarchive" -exportOptionsPlist ExportOptions.plist \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER_ID"
+
+      - name: Clean up key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/keys"
