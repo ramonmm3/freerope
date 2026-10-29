@@ -13,11 +13,13 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="app/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="app/icon-180.png">
-  <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
-  <link href="https://api.fontshare.com/v2/css?f[]=panchang@700,800&f[]=switzer@400,500,600,700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" rel="stylesheet">
   <style>
-/* Hallmark · v2.0.0 · redesign: full · theme: custom · idea: "the page jumps rope: the headline hops a turning rope and the site counts every jump" · vibe: "loud lime, wide heavy type, gym-floor energy" · paper: brand lime #a6ff00 (the app's own accent, from app/icon.svg) · ink: green-black · faces: Panchang (display), Switzer (body) · hero: the headline jumping a live rope, a running count beside it · signature: the rope, in the hero and again as a tap-to-jump toy · posture: mid/grotesk-wide/chromatic-lime · axes: mid/grotesk-heavy/chromatic-lime */
+/* Hallmark · v2.0.0 · redesign: full · theme: custom · idea: "the page jumps rope: the headline hops a turning rope and the site counts every jump" · vibe: "loud lime, heavy tight type, gym-floor energy" · paper: brand lime #a6ff00 (the app's own accent, from app/icon.svg) · ink: green-black · faces: Inter, display and text cuts (by request: the app's own face, android ui/theme Type.kt) · hero: the headline jumping a live rope, a running count beside it · signature: the rope, in the hero and again as a tap-to-jump toy · posture: mid/grotesk-heavy/chromatic-lime · axes: mid/grotesk-heavy/chromatic-lime */
 /* critique: the old page was near-black with one neon accent, a centred head over six icon cards and a gradient word; this one turns the accent into the ground, sets the facts large and lets the product move */
+/* waive 1: Inter is the display face because the owner asked the site to match the app, which is set in Inter */
 /* waive 47c: the rope is not ornament; it is the product's one motion, and it counts */
 
     :root {
@@ -31,8 +33,8 @@
       --on-ink-soft: #b7c2aa;
       --on-lime-soft: #2e3a1c;
       --focus: #0057ff;
-      --font-display: "Panchang", "Arial Black", sans-serif;
-      --font-body: "Switzer", ui-sans-serif, system-ui, sans-serif;
+      --font-display: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      --font-body: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
       --max: 1200px;
       --gutter: clamp(20px, 4vw, 48px);
       --r-lg: 28px;
@@ -45,12 +47,12 @@
     *, *::before, *::after { box-sizing: border-box; }
     html, body { overflow-x: clip; }
     html { scroll-behavior: smooth; }
-    body { margin: 0; background: var(--lime); color: var(--ink); font: 400 17px/1.5 var(--font-body); -webkit-font-smoothing: antialiased; font-synthesis: none; }
+    body { font-variation-settings: "opsz" 14; margin: 0; background: var(--lime); color: var(--ink); font: 400 17px/1.5 var(--font-body); -webkit-font-smoothing: antialiased; font-synthesis: none; }
     img, video { display: block; max-width: 100%; }
     a { color: inherit; }
     :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; transition: none; }
     .wrap { width: min(100% - 2 * var(--gutter), var(--max)); margin-inline: auto; }
-    h1, h2, h3 { text-wrap: balance; font-family: var(--font-display); font-weight: 800; line-height: .98; letter-spacing: -.01em; margin: 0; overflow-wrap: break-word; min-width: 0; }
+    h1, h2, h3 { text-wrap: balance; font-family: var(--font-display); font-variation-settings: "opsz" 32; font-weight: 800; line-height: .95; letter-spacing: -.045em; margin: 0; overflow-wrap: break-word; min-width: 0; }
     p { margin: 0; }
 
     /* Buttons: one primary style (ink on lime, lime on ink), one quiet style. */
@@ -69,7 +71,7 @@
 
     /* Nav */
     .nav { position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding-block: 24px; }
-    .word { display: inline-flex; align-items: center; gap: 12px; font: 800 20px/1 var(--font-display); text-decoration: none; letter-spacing: -.01em; }
+    .word { display: inline-flex; align-items: center; gap: 12px; font: 800 20px/1 var(--font-display); text-decoration: none; letter-spacing: -.03em; font-variation-settings: "opsz" 32; }
     .word img { width: 36px; height: 36px; border-radius: 9px; }
     .nav-links { display: flex; align-items: center; gap: 28px; font-weight: 500; }
     .nav-links a:not(.btn) { text-decoration: none; }
@@ -85,13 +87,13 @@
     .rope { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: round; }
     .handle { fill: var(--ink); }
     .jumper { position: relative; z-index: 1; text-align: center; will-change: transform; }
-    .hero h1 { font-size: clamp(48px, 9.2vw, 132px); }
+    .hero h1 { font-size: clamp(56px, 11vw, 168px); }
     .hero h1 span { display: block; }
     .hero-foot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px 48px; align-items: end; padding-bottom: 36px; }
     .lead { font-size: clamp(18px, 1.6vw, 21px); max-width: 34ch; font-weight: 500; }
     .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
     .tally { text-align: right; }
-    .tally b { display: block; font: 800 clamp(40px, 5vw, 64px)/1 var(--font-display); font-variant-numeric: tabular-nums; }
+    .tally b { display: block; font: 800 clamp(40px, 5vw, 64px)/1 var(--font-display); font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
     .tally span { color: var(--on-lime-soft); font-size: 15px; }
 
     /* Ink sections */
@@ -114,10 +116,10 @@
     .toy { background: var(--paper); }
     .toy-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap:  48px var(--col-gap); align-items: center; }
     .pad { position: relative; aspect-ratio: 4 / 3; border-radius: var(--r-lg); background: var(--lime); display: grid; place-items: center; overflow: hidden; touch-action: manipulation; cursor: pointer; user-select: none; -webkit-user-select: none; }
-    .pad .jumper b { display: block; font: 800 clamp(72px, 12vw, 160px)/1 var(--font-display); font-variant-numeric: tabular-nums; }
+    .pad .jumper b { display: block; font: 800 clamp(72px, 12vw, 160px)/1 var(--font-display); font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
     .pad .jumper span { font-weight: 600; }
     .pad-read { display: flex; gap: 36px; margin-top: 28px; }
-    .pad-read b { display: block; font: 800 34px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+    .pad-read b { display: block; font: 800 34px/1 var(--font-display); font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
     .pad-read span { font-size: 15px; color: var(--on-lime-soft); }
     .pad-hint { margin-top: 20px; min-height: 1.5em; font-weight: 500; }
 
@@ -165,7 +167,7 @@
     .support { text-align: left; }
     .cost { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px var(--col-gap); margin-top: 48px; }
     .cost div { border-top: 2px solid var(--lime); padding-top: 20px; }
-    .cost b { display: block; font: 800 clamp(56px, 9vw, 128px)/1 var(--font-display); color: var(--lime); }
+    .cost b { display: block; font: 800 clamp(64px, 11vw, 160px)/1 var(--font-display); font-variation-settings: "opsz" 32; letter-spacing: -.05em; color: var(--lime); }
     .cost span { color: var(--on-ink-soft); font-size: 18px; }
     .support-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px; margin-top: 48px; }
     .support-foot p { max-width: 52ch; color: var(--on-ink-soft); }
@@ -184,7 +186,7 @@
 
     footer { padding-block: 64px 48px; }
     .foot { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px var(--col-gap); align-items: end; }
-    .foot .big { grid-column: 1 / -1; font: 800 clamp(44px, 12.4vw, 168px)/.9 var(--font-display); color: var(--lime); }
+    .foot .big { grid-column: 1 / -1; font: 800 clamp(64px, 17vw, 240px)/.85 var(--font-display); font-variation-settings: "opsz" 32; letter-spacing: -.06em; color: var(--lime); }
     .foot p { color: var(--on-ink-soft); font-size: 15px; max-width: 48ch; }
     .foot a { color: var(--lime); }
 
@@ -200,7 +202,7 @@
       .session-aside { position: static; }
       .shot { display: none; }
       .foot { grid-template-columns: minmax(0, 1fr); }
-      .hero h1 { font-size: clamp(40px, 12.4vw, 96px); }
+      .hero h1 { font-size: clamp(52px, 17vw, 120px); }
     }
     @media (max-width: 520px) {
       body { font-size: 16px; }
@@ -242,7 +244,7 @@
         <p class="lead">Free live counting for your Crossrope AMP handle. No membership, no account.</p>
         <div class="ctas">
           <a class="btn primary" id="heroCta" href="#get">Get FreeRope</a>
-          <a class="btn quiet" href="app/">Try the demo</a>
+          <a class="btn quiet" href="app/">Open the web app</a>
         </div>
       </div>
       <p class="tally" aria-live="off"><b id="heroCount">0</b><span>jumps since you got here</span></p>
@@ -365,14 +367,14 @@
   </div></section>
 
   <section id="support" class="on-ink"><div class="wrap support rise">
-    <h2 class="head">Help FreeRope reach the App Store.</h2>
+    <h2 class="head">Help keep FreeRope updated.</h2>
     <div class="cost">
-      <div><b>$99</b><span>a year for Apple’s App Store</span></div>
-      <div><b>$25</b><span>once for Google Play</span></div>
+      <div><b>$99</b><span>a year keeps FreeRope on Apple’s App Store</span></div>
+      <div><b>$0</b><span>what FreeRope costs you, now and later</span></div>
     </div>
     <div class="support-foot">
-      <a class="btn primary" href="https://www.paypal.com/donate/?business=ramonmm3%40gmail.com&amp;item_name=Help+FreeRope+reach+the+App+Store+and+Play+Store&amp;currency_code=USD" target="_blank" rel="noopener">Donate with PayPal</a>
-      <p>FreeRope is free and stays free. If it earns a spot in your routine, a small tip gets it into the stores (no more TestFlight, no more install warnings) and keeps updates coming. Any amount helps. Thank you!</p>
+      <a class="btn primary" href="https://www.paypal.com/donate/?business=ramonmm3%40gmail.com&amp;item_name=Keep+FreeRope+updated&amp;currency_code=USD" target="_blank" rel="noopener">Donate with PayPal</a>
+      <p>FreeRope is free and stays free. If it earns a spot in your routine, a small tip covers Apple’s yearly fee and the time that goes into new features and fixes. Any amount helps. Thank you!</p>
     </div>
   </div></section>
 
@@ -382,7 +384,7 @@
       <details><summary>Is it really free?</summary><p>Yes. No ads, no account, no subscription. It’s a side project shared with r/jumprope.</p></details>
       <details><summary>Which handles work?</summary><p>Crossrope AMP handles (the smart handles that count jumps). FreeRope talks to the handle directly, so you don’t need the Crossrope app or a membership. Non-AMP Crossrope handles have no sensor to count with, but the demo mode still lets you look around.</p></details>
       <details><summary>Is the iPhone version a real app?</summary><p>Yes. It’s a native iPhone app installed through TestFlight, Apple’s official beta-testing app. Each TestFlight build lasts 90 days and new builds install automatically, so you just keep using it. The next step is the App Store itself.</p></details>
-      <details><summary>Why isn’t it in the App Store or Play Store?</summary><p>Publishing to the stores costs $99 a year for Apple and $25 once for Google. Sharing it directly keeps it free for now. On Android you install the app file yourself; on iPhone it comes through TestFlight, Apple’s beta-testing app. If enough people <a href="#support">chip in</a>, FreeRope goes into both stores.</p></details>
+      <details><summary>Why isn’t it on Google Play?</summary><p>Sharing the Android app directly keeps things simple for now: you install the app file from this page, and FreeRope tells you when an update is out.</p></details>
       <details><summary>Is it safe to install?</summary><p>Android shows the same warning for every app that doesn’t come from the Play Store. FreeRope only asks for Bluetooth (to talk to your handle) and internet (only to check this site for updates). It has no account, no tracking, and your workouts never leave your phone.</p></details>
       <details><summary>How are calories calculated?</summary><p>From published jump rope oxygen-uptake studies and the 2024 Compendium of Physical Activities, scaled to your height, weight, age and sex. FreeRope adds the physical work of turning your rope, so heavier ropes count for more: about 11% more for a 1 lb rope than a ¼ lb one for an average adult. It’s still an estimate (±10 to 15%), like any app without a heart-rate strap.</p></details>
       <details><summary>Will I lose my workouts when I update?</summary><p>No. Install the new FreeRope.apk over the old one and everything stays. On iPhone, TestFlight updates keep your workouts too. One exception: 1.5.1 moved to FreeRope&rsquo;s own signing key, so if you installed 1.5 on day one, Android will say the update conflicts. Uninstall 1.5 (this clears workouts saved in it), then install 1.5.1. Every update after that installs over the top as usual.</p></details>
@@ -394,7 +396,7 @@
     <div class="big">FreeRope</div>
     <div>
       <p>An independent project, not affiliated with Crossrope. Made for the r/jumprope community.</p>
-      <p style="margin-top:10px"><a href="https://www.paypal.com/donate/?business=ramonmm3%40gmail.com&amp;item_name=Help+FreeRope+reach+the+App+Store+and+Play+Store&amp;currency_code=USD" target="_blank" rel="noopener">Support FreeRope</a></p>
+      <p style="margin-top:10px"><a href="https://www.paypal.com/donate/?business=ramonmm3%40gmail.com&amp;item_name=Keep+FreeRope+updated&amp;currency_code=USD" target="_blank" rel="noopener">Support FreeRope</a></p>
     </div>
   </div></footer>
 
