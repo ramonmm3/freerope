@@ -40,7 +40,7 @@
       --r-lg: 28px;
       --r-md: 16px;
       --ease: cubic-bezier(.2, .8, .2, 1);
-      --shadow: rgb(0 0 0 / .6);
+      --mask-solid: #000;
       --col-gap: clamp(40px, 6vw, 96px);
       color-scheme: light;
     }
@@ -48,7 +48,7 @@
     html, body { overflow-x: clip; }
     html { scroll-behavior: smooth; }
     body { font-variation-settings: "opsz" 14; margin: 0; background: var(--lime); color: var(--ink); font: 400 17px/1.5 var(--font-body); -webkit-font-smoothing: antialiased; font-synthesis: none; }
-    img, video { display: block; max-width: 100%; }
+    img, video { display: block; max-width: 100%; height: auto; }
     a { color: inherit; }
     :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; transition: none; }
     .wrap { width: min(100% - 2 * var(--gutter), var(--max)); margin-inline: auto; }
@@ -104,11 +104,11 @@
     .on-ink .sub { color: var(--on-ink-soft); }
 
     /* The handle, not the cloud: video + live screen */
-    .direct { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap:  48px var(--col-gap); align-items: center; }
+    .direct { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap:  48px var(--col-gap); align-items: center; }
     .film { border-radius: var(--r-lg); overflow: hidden; background: var(--ink-2); aspect-ratio: 16 / 9; }
     .film video { width: 100%; height: 100%; object-fit: cover; }
     .film-note { margin-top: 16px; color: var(--on-ink-soft); font-size: 15px; }
-    .direct .head { max-width: 12ch; }
+    .direct .head { max-width: 12ch; font-size: clamp(32px, 3.8vw, 56px); }
     /* Wide type in a side column: smaller, so no word ever splits. */
     .get-grid .head, .session .head, .toy .head { font-size: clamp(30px, 3.7vw, 54px); }
 
@@ -126,7 +126,9 @@
     /* What a session gives you */
     .session { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap:  48px var(--col-gap); align-items: start; }
     .session-aside { position: sticky; top: 32px; }
-    .shot { width: min(100%, 260px); border-radius: 34px; margin-top: 40px; box-shadow: 0 30px 60px -20px var(--shadow); }
+    /* The real screen, cut from the App Store shot: rounded like the phone, fading out at the bottom. */
+    .shot { width: min(100%, 320px); margin-top: 40px; border-radius: 44px 44px 0 0; border: 1px solid var(--ink-3); border-bottom: 0;
+      -webkit-mask-image: linear-gradient(to bottom, var(--mask-solid) 78%, transparent); mask-image: linear-gradient(to bottom, var(--mask-solid) 78%, transparent); }
     .gives { list-style: none; margin: 0; padding: 0; }
     .gives li { padding-block: 32px; border-top: 1px solid var(--ink-3); display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
     .gives li:last-child { border-bottom: 1px solid var(--ink-3); }
@@ -200,7 +202,7 @@
       .tally { text-align: left; }
       .direct, .toy-grid, .session, .get-grid, .faq-grid { grid-template-columns: minmax(0, 1fr); }
       .session-aside { position: static; }
-      .shot { display: none; }
+      .shot { width: min(100%, 300px); }
       .foot { grid-template-columns: minmax(0, 1fr); }
       .hero h1 { font-size: clamp(52px, 17vw, 120px); }
     }
@@ -258,7 +260,7 @@
     </div>
     <div id="video" hidden>
       <div class="film"><video id="promo" src="freerope-promo.mp4" poster="shots/poster.jpg" controls playsinline muted loop preload="metadata"></video></div>
-      <p class="film-note">Thirty seconds of FreeRope, recorded on a real handle.</p>
+      <p class="film-note">FreeRope in under a minute, recorded on a real handle.</p>
     </div>
   </div></section>
 
@@ -282,7 +284,7 @@
   <section class="on-ink"><div class="wrap session">
     <div class="session-aside rise">
       <h2 class="head">After every set, the whole story.</h2>
-      <img class="shot" src="shots/summary.jpg" alt="FreeRope summary screen with activity rings and this week's jumps" loading="lazy" width="646" height="1501">
+      <img class="shot" src="shots/session.jpg" alt="A FreeRope workout: pace chart with rests shaded, and the same energy as running, cycling or swimming" loading="lazy" width="720" height="1577">
     </div>
     <ul class="gives rise">
       <li><h3>Live jump count</h3><p>Talks straight to your handle over Bluetooth. Big, glanceable numbers mid-set, with voice cues every lap.</p></li>
@@ -306,7 +308,7 @@
 
       <div class="panel" id="p-android">
         <a class="btn primary" href="FreeRope.apk" download><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Android</a>
-        <p class="meta"><span id="apkMeta">FreeRope.apk</span>, for Android 12 or newer</p>
+        <p class="meta"><span id="apkMeta">FreeRope.apk</span>, for Android 12 or newer. Coming soon to Google Play.</p>
         <ol class="steps">
           <li><b>Download</b><span>Tap the button above. Your phone may say the file “might be harmful”. That’s the standard warning for any app that isn’t from the Play Store. Tap <i>Download anyway</i>.</span></li>
           <li><b>Open it</b><span>Tap the download when it finishes. If Android asks to allow installs from your browser, tap <i>Settings</i>, switch on <i>Allow from this source</i>, then go back.</span></li>
@@ -384,7 +386,7 @@
       <details><summary>Is it really free?</summary><p>Yes. No ads, no account, no subscription. It’s a side project shared with r/jumprope.</p></details>
       <details><summary>Which handles work?</summary><p>Crossrope AMP handles (the smart handles that count jumps). FreeRope talks to the handle directly, so you don’t need the Crossrope app or a membership. Non-AMP Crossrope handles have no sensor to count with, but the demo mode still lets you look around.</p></details>
       <details><summary>Is the iPhone version a real app?</summary><p>Yes. It’s a native iPhone app installed through TestFlight, Apple’s official beta-testing app. Each TestFlight build lasts 90 days and new builds install automatically, so you just keep using it. The next step is the App Store itself.</p></details>
-      <details><summary>Why isn’t it on Google Play?</summary><p>Sharing the Android app directly keeps things simple for now: you install the app file from this page, and FreeRope tells you when an update is out.</p></details>
+      <details><summary>Is it on Google Play?</summary><p>Soon. FreeRope is coming to Google Play. Until then, install the app file from this page, and FreeRope tells you when an update is out.</p></details>
       <details><summary>Is it safe to install?</summary><p>Android shows the same warning for every app that doesn’t come from the Play Store. FreeRope only asks for Bluetooth (to talk to your handle) and internet (only to check this site for updates). It has no account, no tracking, and your workouts never leave your phone.</p></details>
       <details><summary>How are calories calculated?</summary><p>From published jump rope oxygen-uptake studies and the 2024 Compendium of Physical Activities, scaled to your height, weight, age and sex. FreeRope adds the physical work of turning your rope, so heavier ropes count for more: about 11% more for a 1 lb rope than a ¼ lb one for an average adult. It’s still an estimate (±10 to 15%), like any app without a heart-rate strap.</p></details>
       <details><summary>Will I lose my workouts when I update?</summary><p>No. Install the new FreeRope.apk over the old one and everything stays. On iPhone, TestFlight updates keep your workouts too. One exception: 1.5.1 moved to FreeRope&rsquo;s own signing key, so if you installed 1.5 on day one, Android will say the update conflicts. Uninstall 1.5 (this clears workouts saved in it), then install 1.5.1. Every update after that installs over the top as usual.</p></details>
