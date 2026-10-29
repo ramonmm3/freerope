@@ -24,8 +24,11 @@ While `config.js` is empty, the app behaves exactly as before: no Leaderboard ta
   (https://supabase.com/dashboard/project/ysjiwnvxilgjtwnmhxmi/editor/17809). Nobody can read it
   through the API; one install can send 5 messages an hour.
 - Redirect URLs are set (web app, `freerope://auth-callback`, `freeropepreview://auth-callback`, localhost).
-- Still to do: custom SMTP (needed before the 6-digit email code works, because Supabase only lets you
-  edit the email template with your own sender), then the Google and Apple providers (steps 3 and 4).
+- Email: sent through Gmail SMTP as "FreeRope <ramonmm3@gmail.com>" (smtp.gmail.com:465, a Gmail app
+  password; ~500/day). Both "Magic link or OTP" and "Confirm sign up" templates show the code.
+  **Email OTP length must stay 6** (Sign In / Providers → Email): new projects default to 8, and the
+  apps take 6 digits.
+- Still to do: the Google and Apple providers (steps 3 and 4).
 
 ## Set up a project from scratch (about 30 minutes, once)
 
