@@ -749,7 +749,7 @@ function accountGroup() {
   return `<div class="account-card">${avatar(p.username, 56)}<div style="flex:1;min-width:0"><div class="acct-name">${esc(p.username)}${p.country ? ` <span class="flag">${flag(p.country)}</span>` : ''}</div>
       <div class="small muted acct-sub">Signed in with ${how}${account.user?.email && !/privaterelay/.test(account.user.email) ? ` · ${esc(account.user.email)}` : ''}</div></div></div>
     <div class="group" style="margin-top:12px">
-      <button class="row-item" data-act="editName"><div class="tile" style="background:var(--accent)">${icon('person').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Name</span><span class="value">${esc(p.username)}</span>${icon('chevR', 'chev')}</button>
+      <button class="row-item" data-act="editName"><div class="tile" style="background:var(--accent)">${icon('person').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Username</span><span class="value">${esc(p.username)}</span>${icon('chevR', 'chev')}</button>
       <button class="row-item" data-act="editName"><div class="tile" style="background:var(--blue)">${icon('globe')}</div><span class="title">Country</span><span class="value">${p.country ? `${flag(p.country)} ${esc(countryName(p.country))}` : 'Hidden'}</span>${icon('chevR', 'chev')}</button>
       <button class="row-item" data-act="tab" data-arg="leaders"><div class="tile" style="background:var(--yellow)">${icon('trophy').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Leaderboard</span>${icon('chevR', 'chev')}</button>
     </div>
