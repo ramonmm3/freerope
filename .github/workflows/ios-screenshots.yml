@@ -47,6 +47,7 @@ jobs:
             sleep "$2"
             xcrun simctl io "$DEV" screenshot "shots/$1.png"
             xcrun simctl terminate "$DEV" com.ramon.freerope || true
+            sleep 2
           }
           shot summary 10
           shot live 75

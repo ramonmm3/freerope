@@ -126,6 +126,7 @@ const P = {
   walk: '<circle cx="13" cy="4.5" r="2"/><path d="M9 22l2.5-7 2.5 2v5M10 10l2.5-2.5 2 3.5 3 1.5M12.5 7.5L9 10v4"/>',
   star: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" fill="currentColor" stroke="none"/>',
   units: '<path d="M3 7h18M3 12h12M3 17h6"/>',
+  xmark: '<path d="M6 6l12 12M18 6L6 18"/>',
   heart: '<path d="M12 20.5s-7.5-4.6-9.2-9C1.5 8 3.6 4.5 7 4.5c2.1 0 3.5 1.2 5 3 1.5-1.8 2.9-3 5-3 3.4 0 5.5 3.5 4.2 7-1.7 4.4-9.2 9-9.2 9z" fill="currentColor" stroke="none"/>',
   trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4.5a3 3 0 0 0 3.5 4M16 6h3.5a3 3 0 0 1-3.5 4M12 13v4M8.5 20.5h7M10 17h4l.5 3.5h-5z"/>',
   refresh: '<path d="M20 11a8 8 0 0 0-14.5-4.5M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5M20 20v-4h-4"/>',
@@ -1130,8 +1131,15 @@ engine.addEventListener('change', () => {
   if (!s || !liveEl) return;
   if (s.phase === 'COUNTDOWN') {
     let cd = document.querySelector('.countdown');
-    if (!cd) { cd = document.createElement('div'); cd.className = 'countdown num'; document.body.append(cd); }
-    if (cd.dataset.n !== String(s.countdown)) { cd.dataset.n = s.countdown; cd.innerHTML = `<span>${s.countdown}</span>`; }
+    if (!cd) { cd = document.createElement('div'); cd.className = 'countdown'; document.body.append(cd); }
+    if (cd.dataset.n !== String(s.countdown)) {
+      const [a, b] = LIVE_COLORS[s.plan.mode];
+      cd.dataset.n = s.countdown;
+      cd.innerHTML = `<div class="cd-ring"><svg viewBox="0 0 240 240"><defs><linearGradient id="cdg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>
+        <circle cx="120" cy="120" r="113" fill="none" stroke="${a}" stroke-opacity=".2" stroke-width="14"/>
+        <circle class="cd-arc" cx="120" cy="120" r="113" fill="none" stroke="url(#cdg)" stroke-width="14" stroke-linecap="round" transform="rotate(-90 120 120)"/></svg>
+        <span class="num">${s.countdown}</span></div><div class="cd-label">Get Ready</div>`;
+    }
     return;
   }
   document.querySelector('.countdown')?.remove();
@@ -1139,64 +1147,124 @@ engine.addEventListener('change', () => {
   updateLive(s);
 });
 
+// Same look as the Android app's live screen (LiveWorkoutScreen.kt): ring colours per mode.
+const LIVE_COLORS = { FREE: ['#5bc800', '#b8ff3a'], TIMED: ['#0071e3', '#55d6ff'], TARGET: ['#ff6a00', '#ffc23d'], INTERVAL: ['#e5005a', '#ff7aa8'] };
+const liveColors = (s) => s.phase === 'REST' ? ['#5e5ce6', '#bf5af2'] : s.phase === 'PAUSED' ? ['#ff9f0a', '#ffd60a'] : LIVE_COLORS[s.plan.mode];
+
 function buildLive(s) {
   liveEl.dataset.built = '1';
-  liveEl.innerHTML = `<div class="top"><span class="title">${esc(s.plan.title)}</span><span class="conn"><span class="dot"></span><span class="connText"></span></span></div>
-    <div class="banner dropBanner" style="display:none">Handle disconnected · reconnecting…</div>
-    <div class="ring-wrap"><div class="ringSvg" style="width:100%;height:100%"></div>
-      <div class="ring-center"><div class="phase-chip"></div><div class="big num"></div><div class="ring-sub"></div></div></div>
-    <div class="live-stats"><div><b class="num l-time"></b><span class="l-time-label"></span></div><div><b class="num l-jpm"></b><span>JPM</span></div><div><b class="num l-cal"></b><span>CAL</span></div></div>
-    <svg class="spark" viewBox="0 0 300 52" preserveAspectRatio="none"><path class="sparkPath" fill="none" stroke="#a6ff00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
-    <div class="controls"><button class="btn gray press" data-live="pause"></button><button class="btn red press" data-live="finish">${icon('stop')}Finish</button></div>`;
+  const x = icon('xmark');
+  liveEl.innerHTML = `<div class="live-glow"></div>
+    <div class="live-nav"><button class="live-x press" data-live="end" aria-label="End workout">${x}</button>
+      <div class="live-title"><b>${esc(s.plan.title)}</b><span class="live-sub"></span></div><span class="live-conn"></span></div>
+    ${s.plan.mode === 'INTERVAL' ? `<div class="live-rounds">${Array.from({ length: Math.min(s.plan.rounds, 30) }, () => '<i></i>').join('')}</div>` : ''}
+    <div class="live-mid"><div class="ring-wrap"><div class="ringSvg"></div>
+      <div class="ring-center"><div class="rest-label">Rest</div><div class="big num"></div><div class="unit"></div><div class="ring-sub"></div></div></div></div>
+    <div class="live-card">
+      <div class="lm"><span>Time</span><b class="num l-time" style="color:var(--yellow)"></b></div>
+      <div class="lm"><span>Pace</span><b class="num" style="color:var(--teal)"><span class="l-jpm"></span><small>JPM</small></b></div>
+      <div class="lm"><span>Streak</span><b class="num l-streak" style="color:var(--pink)"></b></div>
+      <div class="lm"><span>Calories</span><b class="num" style="color:#ff5a8c"><span class="l-cal"></span><small>CAL</small></b></div>
+      <svg class="spark" viewBox="0 0 300 52" preserveAspectRatio="none">
+        <defs><linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a6ff00" stop-opacity=".25"/><stop offset="1" stop-color="#a6ff00" stop-opacity="0"/></linearGradient></defs>
+        <line class="sparkAvg" x1="0" x2="300" stroke="rgba(255,255,255,.45)" stroke-dasharray="4 4" stroke-width="1"/>
+        <path class="sparkArea" fill="url(#sparkFill)"/><path class="sparkPath" fill="none" stroke="#a6ff00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle class="sparkDot" r="3.5" fill="#a6ff00"/></svg>
+    </div>
+    <div class="live-ctrls">
+      <button class="ctrl press" data-live="end"><i style="--c:var(--red)">${x}</i><span>End</span></button>
+      <button class="ctrl press" data-live="pause"><i class="pauseIcon"></i><span class="pauseLabel"></span></button>
+    </div>
+    <div class="live-drop">Reconnecting to handle…</div>`;
   liveEl.addEventListener('click', (e) => {
     const b = e.target.closest('[data-live]');
     if (!b) return;
     if (b.dataset.live === 'pause') engine.togglePause();
-    else if (b.dataset.live === 'finish') {
-      if (engine.s && engine.s.jumps === 0) { engine.discard(); releaseWakeLock(); closeLive(); render(); }
-      else engine.finish();
-    }
+    else if (b.dataset.live === 'end') confirmEnd();
   });
+}
+
+/** "End Workout?" like the Android app: save, discard, or keep going. */
+function confirmEnd() {
+  const s = engine.s;
+  if (!s) return;
+  const discard = () => { engine.discard(); releaseWakeLock(); closeLive(); render(); };
+  alertBox('End Workout?', s.jumps > 0 ? `You've done ${fmt(s.jumps)} jumps.` : 'No jumps have been recorded yet.', [
+    ...(s.jumps > 0 ? [{ title: 'End & Save', bold: true, run: () => engine.finish() }] : []),
+    { title: s.jumps > 0 ? 'Discard' : 'End', destructive: true, run: discard },
+    { title: 'Keep Going', run: () => {} },
+  ]);
+}
+
+/** A centred alert with stacked buttons (UIAlertController look, as on Android). */
+function alertBox(title, message, actions) {
+  document.querySelector('.alert-scrim')?.remove();
+  const scrim = document.createElement('div');
+  scrim.className = 'alert-scrim';
+  scrim.innerHTML = `<div class="alert"><div class="alert-text"><b>${esc(title)}</b>${message ? `<span>${esc(message)}</span>` : ''}</div>
+    ${actions.map((a, i) => `<button data-i="${i}" class="${a.destructive ? 'destructive' : ''} ${a.bold ? 'bold' : ''}">${esc(a.title)}</button>`).join('')}</div>`;
+  scrim.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b && e.target !== scrim) return;
+    scrim.remove();
+    if (b) actions[+b.dataset.i].run();
+  });
+  document.body.append(scrim);
 }
 
 function updateLive(s) {
   const q = (c) => liveEl.querySelector(c);
   const rest = s.phase === 'REST', paused = s.phase === 'PAUSED';
-  const p = engine.progress();
-  const colors = rest ? ['#00c3f0', '#6af5ff'] : s.plan.mode === 'TARGET' ? ['#fa114f', '#ff5a8c'] : ['#7be000', '#c8ff4a'];
+  const [a, b] = liveColors(s);
+  liveEl.style.setProperty('--glow', b);
   const size = 300;
-  q('.ringSvg').innerHTML = ringsSVG([[p, colors[0], colors[1]]], size, 0.1).replace(`width="${size}" height="${size}"`, 'width="100%" height="100%"');
-  const chip = q('.phase-chip');
-  chip.textContent = paused ? 'PAUSED' : rest ? 'REST' : s.plan.mode === 'INTERVAL' ? `ROUND ${s.round} / ${s.plan.rounds}` : 'JUMPING';
-  chip.style.background = paused ? 'rgba(255,214,10,.16)' : rest ? 'rgba(100,210,255,.16)' : 'rgba(166,255,0,.14)';
-  chip.style.color = paused ? 'var(--yellow)' : rest ? 'var(--teal)' : 'var(--accent)';
-  const big = q('.big');
+  q('.ringSvg').innerHTML = ringsSVG([[engine.progress(), a, b]], size, 0.075).replace(`width="${size}" height="${size}"`, 'width="100%" height="100%"');
   const left = Math.ceil(s.phaseLeftMs / 1000);
+  const mode = s.plan.mode;
+  q('.live-sub').textContent = mode === 'INTERVAL' ? `Round ${s.round} of ${s.plan.rounds}` : mode === 'TARGET' ? `Goal ${fmt(s.plan.targetJumps)}` : mode === 'TIMED' ? 'Timed' : 'Open goal';
+  liveEl.querySelectorAll('.live-rounds i').forEach((el, i) => { el.style.background = i < s.round ? b : ''; });
+
+  q('.rest-label').style.display = rest ? '' : 'none';
+  const big = q('.big');
   big.textContent = rest ? clock(left) : fmt(s.jumps);
+  big.classList.toggle('small', !rest && s.jumps >= 10000);
   if (s.tick !== lastTick) { lastTick = s.tick; big.classList.remove('bump'); void big.offsetWidth; big.classList.add('bump'); }
-  let sub;
-  if (rest) sub = `Next: round ${s.round + 1}`;
-  else if (s.plan.mode === 'TARGET') sub = `${fmt(Math.max(s.plan.targetJumps - s.jumps, 0))} to go`;
-  else {
-    const lap = s.plan.ringJumps;
-    sub = `Ring ${Math.floor(s.jumps / lap) + 1} · ${fmt(lap - (s.jumps % lap))} to go`;
-  }
-  q('.ring-sub').textContent = sub;
-  const timed = s.plan.mode === 'TIMED' || s.plan.mode === 'INTERVAL';
-  q('.l-time').textContent = timed && !paused ? clock(Math.max(left, 0)) : clock(s.elapsedMs / 1000);
-  q('.l-time-label').textContent = timed ? 'LEFT' : 'TIME';
+  const unit = q('.unit');
+  unit.style.display = rest ? 'none' : '';
+  unit.textContent = paused ? 'PAUSED' : 'JUMPS';
+  unit.style.color = paused ? 'var(--yellow)' : b;
+  const lap = s.plan.ringJumps || 100;
+  q('.ring-sub').textContent = rest ? `Round ${s.round + 1} up next`
+    : mode === 'TIMED' ? `${clock(Math.max(left, 0))} left · ${fmt(lap - (s.jumps % lap))} to next ring`
+    : mode === 'INTERVAL' ? `${clock(Math.max(left, 0))} left in round ${s.round}`
+    : mode === 'TARGET' ? `${fmt(Math.max(s.plan.targetJumps - s.jumps, 0))} to go`
+    : `Ring ${Math.floor(s.jumps / lap) + 1} · ${fmt(lap - (s.jumps % lap))} to go`;
+
+  q('.l-time').textContent = clock(s.elapsedMs / 1000);
   q('.l-jpm').textContent = s.jpm;
+  q('.l-streak').textContent = fmt(s.streak);
   q('.l-cal').textContent = Math.floor(s.calories);
-  q('[data-live="pause"]').innerHTML = paused ? `${icon('play')}Resume` : `${icon('pause')}Pause`;
-  const pace = s.pace.slice(-60);
+  const pace = s.pace;
   if (pace.length > 1) {
-    const max = Math.max(...pace, 60), min = Math.min(...pace.filter((v) => v > 0), max) - 10;
-    q('.sparkPath').setAttribute('d', pace.map((v, i) => `${i ? 'L' : 'M'}${(i / (pace.length - 1) * 300).toFixed(1)},${(50 - Math.max(v - min, 0) / Math.max(max - min, 1) * 46).toFixed(1)}`).join(''));
+    const live = pace.filter((v) => v > 0);
+    const hi = Math.max(...pace, s.avgJpm, 60) + 10, lo = Math.max(Math.min(...(live.length ? live : [0]), s.avgJpm || hi) - 20, 0);
+    const X = (i) => (i / (pace.length - 1) * 300), Y = (v) => 48 - Math.max(v - lo, 0) / Math.max(hi - lo, 1) * 44;
+    const d = pace.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('');
+    q('.sparkPath').setAttribute('d', d);
+    q('.sparkArea').setAttribute('d', `${d}L300,52L0,52Z`);
+    q('.sparkDot').setAttribute('cx', 300); q('.sparkDot').setAttribute('cy', Y(pace.at(-1)));
+    const avg = q('.sparkAvg');
+    avg.style.display = s.avgJpm ? '' : 'none';
+    avg.setAttribute('y1', Y(s.avgJpm)); avg.setAttribute('y2', Y(s.avgJpm));
   }
+
+  const pb = q('[data-live="pause"]');
+  pb.querySelector('i').style.setProperty('--c', paused ? 'var(--green)' : 'var(--yellow)');
+  pb.querySelector('i').innerHTML = paused ? icon('play') : icon('pause');
+  pb.querySelector('.pauseLabel').textContent = paused ? 'Resume' : 'Pause';
   const on = handle.state === 'connected';
-  q('.conn .dot').className = `dot ${on ? 'on' : 'wait'}`;
-  q('.connText').textContent = on ? (handle.demo ? 'Demo' : 'Connected') : 'Reconnecting';
-  q('.dropBanner').style.display = on ? 'none' : '';
+  q('.live-conn').className = `live-conn ${on ? 'on' : 'wait'}`;
+  q('.live-drop').classList.toggle('show', !on);
 }
 
 // ================================================================= input

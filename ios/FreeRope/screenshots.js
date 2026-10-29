@@ -44,7 +44,11 @@
     summary: async () => {},
     workouts: async () => click('[data-act=tab][data-arg=workouts]'),
     history: async () => click('[data-act=tab][data-arg=history]'),
-    pace: async () => { click('[data-act=open]'); await wait(1500); scrollTo('Pace', 100); },
+    pace: async () => {
+      // Retry until the workout screen is really open (a tap too early is ignored).
+      for (let i = 0; i < 10 && !document.querySelector('.chart'); i++) { click('[data-act=open]'); await wait(800); }
+      scrollTo('Pace', 100);
+    },
     live: async () => {
       click('[data-act=tab][data-arg=profile]'); await wait(300); click('[data-act=demo]'); await wait(300);
       click('[data-act=tab][data-arg=summary]'); await wait(300); click('[data-act=start]'); await wait(1200); click('[data-go]');
