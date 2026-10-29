@@ -1,9 +1,15 @@
 # Saves the App Store Connect API key as GitHub secrets so the iOS workflow can upload to TestFlight.
-# Run from PowerShell:  powershell -ExecutionPolicy Bypass -File ios\set-secrets.ps1
+# Run from PowerShell:  powershell -ExecutionPolicy Bypass -File C:\Crossrope\web\ios\set-secrets.ps1
 $gh = 'C:\Program Files\GitHub CLI\gh.exe'
 $repo = 'ramonmm3/freerope'
-$key = Get-ChildItem "$env:USERPROFILE\Downloads\AuthKey_*.p8" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-if (-not $key) { Write-Host 'No AuthKey_*.p8 in Downloads. Download the key from App Store Connect first.'; exit 1 }
+$key = Get-ChildItem "$env:USERPROFILE\Downloads", "$env:USERPROFILE\Desktop", "$env:USERPROFILE\Documents" -Filter 'AuthKey_*.p8' -Recurse -Depth 2 -ErrorAction SilentlyContinue |
+  Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if (-not $key) {
+  Add-Type -AssemblyName System.Windows.Forms
+  $pick = New-Object System.Windows.Forms.OpenFileDialog -Property @{ Title = 'Pick the AuthKey_XXXX.p8 you downloaded from App Store Connect'; Filter = 'API key (*.p8)|*.p8' }
+  if ($pick.ShowDialog() -ne 'OK') { Write-Host 'No key picked.'; exit 1 }
+  $key = Get-Item $pick.FileName
+}
 $keyId = $key.BaseName -replace '^AuthKey_', ''
 Write-Host "Using $($key.Name) (Key ID $keyId)"
 $issuer = Read-Host 'Paste the Issuer ID (shown above the keys list)'
