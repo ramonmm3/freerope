@@ -39,7 +39,7 @@ jobs:
           ")
           xcrun simctl boot "$DEV"; xcrun simctl bootstatus "$DEV" -b
           xcrun simctl status_bar "$DEV" override --time 9:41 --dataNetwork wifi --wifiMode active --wifiBars 3 \
-            --cellularMode active --cellularBars 4 --operatorName '' --batteryState charged --batteryLevel 100
+            --cellularMode active --cellularBars 4 --operatorName '' --batteryState discharging --batteryLevel 100
           xcrun simctl install "$DEV" "$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator/FreeRope.app"
           mkdir -p shots
           shot() {
