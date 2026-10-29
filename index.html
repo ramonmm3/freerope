@@ -196,9 +196,16 @@
       </div>
 
       <div class="panel" id="p-iphone">
-        <div class="tip">Safari can't use Bluetooth on its own, so iPhone needs one free helper app. Pick the route for your iPhone; both take about a minute.</div>
-
-        <h3 class="route">Route 1 · Safari <span class="badge">Recommended · iOS 26.2 or newer</span></h3>
+        <a class="btn primary big-btn" href="https://testflight.apple.com/join/ZqNrdYr5" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>Get FreeRope on TestFlight</a>
+        <div class="note" style="text-align:center">A real iPhone app · iOS 16 or newer · free</div>
+        <ol class="steps">
+          <li><b>Tap the button above</b><span>It opens Apple's TestFlight page for FreeRope. If you don't have TestFlight yet, it sends you to the App Store to get it (free, made by Apple).</span></li>
+          <li><b>Accept and install</b><span>Back on the FreeRope page, tap <i>Accept</i>, then <i>Install</i>. FreeRope appears on your home screen like any other app.</span></li>
+          <li><b>Jump</b><span>Open FreeRope, allow Bluetooth, shake your handle to wake it and tap <i>Connect</i>. TestFlight installs updates for you.</span></li>
+        </ol>
+        <p class="done">TestFlight is Apple's own way to share apps before they're in the App Store, so there's nothing to sideload and no warnings.</p>
+        <details class="alt"><summary>TestFlight link full, or rather not install an app? Use the web version</summary>
+        <h3 class="route">Safari + beacio <span class="badge">Recommended · iOS 26.2 or newer</span></h3>
         <ol class="steps">
           <li><b>Get beacio (free)</b><span>It adds Bluetooth to Safari. Open it once and follow its single setup screen: it switches the extension on and asks you to allow it on websites (tap <i>Always Allow</i>).</span>
             <div style="margin-top:12px"><a class="btn primary" href="https://apps.apple.com/app/id6761301368" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>Get beacio</a></div></li>
@@ -209,7 +216,7 @@
         </ol>
         <p class="done">That's it: a FreeRope icon on your home screen. Shake your handle to wake it and tap <i>Connect Handle</i>.</p>
 
-        <h3 class="route">Route 2 · Bluefy <span class="badge gray">Any iOS version</span></h3>
+        <h3 class="route">Bluefy <span class="badge gray">Any iOS version</span></h3>
         <ol class="steps">
           <li><b>Get Bluefy (free)</b><span>A browser with Bluetooth built in.</span>
             <div style="margin-top:12px"><a class="btn ghost" href="https://apps.apple.com/app/id1492822055" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>Get Bluefy</a></div></li>
@@ -221,6 +228,7 @@
         <details class="alt"><summary>Want a FreeRope icon for Bluefy too? (optional)</summary>
           <p>Save <a href="app/icon-512.png" target="_blank" rel="noopener">this icon</a> to Photos. In the Shortcuts app tap <b>+</b> → <b>Open URLs</b>, paste the link below, rename it <b>FreeRope</b>, then use <b>Add to Home Screen</b> and pick the icon.</p>
           <div class="copy"><code id="bfUrl"></code><button data-copy="bluefy">Copy</button></div>
+        </details>
         </details>
       </div>
 
@@ -242,7 +250,7 @@
     <div class="support">
       <div class="heart"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.2 0 3.6 1.2 5.2 3 1.6-1.8 3-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg></div>
       <h2 class="sec-title" style="margin-top:18px">Help FreeRope reach the App Store</h2>
-      <p class="sec-lead" style="margin-bottom:28px">FreeRope is free and stays free. Publishing it properly costs <b style="color:var(--text)">$99 a year</b> for Apple's App Store and <b style="color:var(--text)">$25</b> once for Google Play. If FreeRope earns a spot in your routine, a small tip gets it into the stores (no more Bluefy, no more install warnings) and keeps updates coming.</p>
+      <p class="sec-lead" style="margin-bottom:28px">FreeRope is free and stays free. Publishing it properly costs <b style="color:var(--text)">$99 a year</b> for Apple's App Store and <b style="color:var(--text)">$25</b> once for Google Play. If FreeRope earns a spot in your routine, a small tip gets it into the stores (no more TestFlight, no more install warnings) and keeps updates coming.</p>
       <a class="btn primary" href="https://www.paypal.com/donate/?business=ramonmm3%40gmail.com&amp;item_name=Help+FreeRope+reach+the+App+Store+and+Play+Store&amp;currency_code=USD" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.4 21.5H3.7a.6.6 0 0 1-.6-.7L5.8 3.3c.1-.5.5-.8 1-.8h6.6c3.4 0 5.6 1.8 5 5.2-.6 3.8-3.1 5.4-6.5 5.4H9.6c-.4 0-.7.3-.8.7z"/><path d="M19.6 8.2c.9.9 1.3 2.2 1 3.9-.6 3.8-3.1 5.3-6.5 5.3h-1.3c-.4 0-.7.3-.8.7l-.7 4.4h-2.9" opacity=".6"/></svg>Donate with PayPal</a>
       <p class="note">Any amount helps. Thank you!</p>
     </div>
@@ -253,11 +261,11 @@
     <div class="faq" style="margin-top:32px">
       <details><summary>Is it really free?</summary><p>Yes. No ads, no account, no subscription. It's a side project shared with r/jumprope.</p></details>
       <details><summary>Which handles work?</summary><p>Crossrope AMP handles (the smart handles that count jumps). FreeRope talks to the handle directly, so you don't need the Crossrope app or a membership. Non-AMP Crossrope handles have no sensor to count with, but the demo mode still lets you look around.</p></details>
-      <details><summary>Can I get it as a real app on iPhone?</summary><p>Almost. Installing a true app on iPhone without the App Store isn't possible for free: every route needs Apple's $99/year developer account, or sideloading tools that need a computer and expire every 7 days. Route 1 above gives you a FreeRope icon on your home screen in three steps. If donations cover the developer account, FreeRope goes into the App Store.</p></details>
-      <details><summary>Why isn't it in the App Store or Play Store?</summary><p>Publishing to the stores costs $99 a year for Apple and $25 once for Google. Sharing it directly keeps it free for now. On Android you install the app file yourself; on iPhone it runs in Bluefy because Safari doesn't support Bluetooth. If enough people <a href="#support">chip in</a>, FreeRope goes into both stores.</p></details>
+      <details><summary>Is the iPhone version a real app?</summary><p>Yes. It's a native iPhone app installed through TestFlight, Apple's official beta-testing app. Each TestFlight build lasts 90 days and new builds install automatically, so you just keep using it. The next step is the App Store itself.</p></details>
+      <details><summary>Why isn't it in the App Store or Play Store?</summary><p>Publishing to the stores costs $99 a year for Apple and $25 once for Google. Sharing it directly keeps it free for now. On Android you install the app file yourself; on iPhone it comes through TestFlight, Apple's beta-testing app. If enough people <a href="#support">chip in</a>, FreeRope goes into both stores.</p></details>
       <details><summary>Is it safe to install?</summary><p>Android shows the same warning for every app that doesn't come from the Play Store. FreeRope only asks for Bluetooth (to talk to your handle) and internet (only to check this site for updates). It has no account, no tracking, and your workouts never leave your phone.</p></details>
       <details><summary>How are calories calculated?</summary><p>From published jump rope oxygen-uptake studies and the 2024 Compendium of Physical Activities, scaled to your height, weight, age and sex. FreeRope adds the physical work of turning your rope, so heavier ropes count for more: about 11% more for a 1 lb rope than a ¼ lb one for an average adult. It's still an estimate (±10–15%), like any app without a heart-rate strap.</p></details>
-      <details><summary>Will I lose my workouts when I update?</summary><p>No. Install the new FreeRope.apk over the old one and everything stays. On iPhone, your workouts are saved in Bluefy; just don't clear its website data.</p></details>
+      <details><summary>Will I lose my workouts when I update?</summary><p>No. Install the new FreeRope.apk over the old one and everything stays. On iPhone, TestFlight updates keep your workouts too.</p></details>
       <details><summary>Is this made by Crossrope?</summary><p>No. FreeRope is an independent fan project and isn't affiliated with or endorsed by Crossrope. Crossrope and AMP are their trademarks.</p></details>
     </div>
   </div></section>
