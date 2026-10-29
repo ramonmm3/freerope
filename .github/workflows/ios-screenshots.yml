@@ -1,0 +1,61 @@
+# App Store screenshots from the real iPhone app in the iOS Simulator (6.3" iPhone, 1206×2622).
+# Uses the debug-only screenshot mode in WebViewController.swift + ios/FreeRope/screenshots.js.
+name: iOS screenshots
+
+on:
+  workflow_dispatch:
+
+jobs:
+  screenshots:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode and XcodeGen
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | grep -v beta | sort -V | tail -1)"
+          brew install xcodegen
+
+      - name: Build for the simulator
+        working-directory: ios
+        run: |
+          xcodegen
+          xcodebuild build -project FreeRope.xcodeproj -scheme FreeRope -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO -quiet \
+            -derivedDataPath "$RUNNER_TEMP/dd"
+
+      - name: Take screenshots
+        working-directory: ios
+        run: |
+          set -x
+          DEV=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)['devices']
+          for want in ('iPhone 17 Pro', 'iPhone 16 Pro', 'iPhone 15 Pro'):
+              for r in sorted(d, reverse=True):
+                  for x in d[r]:
+                      if x['name'] == want: print(x['udid']); sys.exit()
+          ")
+          xcrun simctl boot "$DEV"; xcrun simctl bootstatus "$DEV" -b
+          xcrun simctl status_bar "$DEV" override --time 9:41 --dataNetwork wifi --wifiMode active --wifiBars 3 \
+            --cellularMode active --cellularBars 4 --operatorName '' --batteryState charged --batteryLevel 100
+          xcrun simctl install "$DEV" "$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator/FreeRope.app"
+          mkdir -p shots
+          shot() {
+            SIMCTL_CHILD_FREEROPE_SHOT="$1" xcrun simctl launch "$DEV" com.ramon.freerope
+            sleep "$2"
+            xcrun simctl io "$DEV" screenshot "shots/$1.png"
+            xcrun simctl terminate "$DEV" com.ramon.freerope || true
+          }
+          shot summary 10
+          shot live 75
+          shot pace 12
+          shot workouts 10
+          shot history 10
+          sips -g pixelWidth -g pixelHeight shots/*.png
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-store-screenshots
+          path: ios/shots
