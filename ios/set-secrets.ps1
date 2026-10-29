@@ -12,7 +12,7 @@ if (-not $key) {
 }
 $keyId = $key.BaseName -replace '^AuthKey_', ''
 Write-Host "Using $($key.Name) (Key ID $keyId)"
-$issuer = Read-Host 'Paste the Issuer ID (shown above the keys list)'
+$issuer = 'e0a663a1-ef5f-4ee2-a223-7a111952f157' # Issuer ID shown above the team keys list (not secret)
 Get-Content $key.FullName -Raw | & $gh secret set ASC_KEY_P8 -R $repo
 & $gh secret set ASC_KEY_ID -R $repo -b $keyId
 & $gh secret set ASC_ISSUER_ID -R $repo -b $issuer.Trim()
