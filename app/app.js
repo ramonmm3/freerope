@@ -616,11 +616,18 @@ function toast(text) {
 
 function showNoBluetooth() {
   const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  openSheet(`<h3>Bluetooth isn't available here</h3>
-    <p class="sub">${ios ? 'Safari on iPhone can’t talk to Bluetooth devices. Open FreeRope in <b>Bluefy</b>, a free browser that can.' : 'This browser can’t talk to Bluetooth devices. Open FreeRope in <b>Google Chrome</b>.'}</p>
-    ${ios ? `<a class="btn press" style="text-decoration:none" href="bluefy://open?url=${encodeURI(location.origin + location.pathname)}">Open in Bluefy</a>
-    <a class="btn gray press" style="text-decoration:none;margin-top:10px" href="https://apps.apple.com/app/id1492822055" target="_blank" rel="noopener">Get Bluefy (free)</a>
-    <p class="center small muted" style="margin:12px 0 0">Already in Safari with the beacio extension? Turn it on for this site and reload.</p>` : ''}
+  // A home-screen icon added with "Open as Web App" on runs outside Safari, where extensions can't help.
+  const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+  const appUrl = location.origin + location.pathname;
+  const steps = !ios
+    ? '<p class="sub">This browser can’t talk to Bluetooth devices. Open FreeRope in <b>Google Chrome</b> or <b>Edge</b>.</p>'
+    : standalone
+      ? `<p class="sub">This icon opens FreeRope as a separate web app, where Bluetooth isn’t available. Remove it, then in Safari tap <b>Share → Add to Home Screen</b> again and switch <b>off</b> “Open as Web App”.</p>`
+      : `<p class="sub">Safari needs the free <b>beacio</b> app to use Bluetooth. Install it, open it once and follow its setup screen, then come back here and tap Connect.</p>
+         <a class="btn press" style="text-decoration:none" href="https://apps.apple.com/app/id6761301368" target="_blank" rel="noopener">Get beacio (free)</a>
+         <p class="center small muted" style="margin:14px 0 6px">Older iPhone, or prefer another browser?</p>
+         <a class="btn gray press" style="text-decoration:none" href="bluefy://open?url=${encodeURI(appUrl)}">Open in Bluefy</a>`;
+  openSheet(`<h3>Bluetooth isn't available here</h3>${steps}
     <button class="btn gray press" style="margin-top:12px" data-sheet="demo">Try the Demo Instead</button>`, (sh) => {
     sh.querySelector('[data-sheet="demo"]').onclick = () => { handle.startDemo(); closeSheet(); toast('Demo handle connected'); };
   });
