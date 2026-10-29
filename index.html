@@ -269,7 +269,8 @@
 
     // Show the video section only once the promo file is there.
     const promo = document.getElementById('promo');
-    promo.addEventListener('loadedmetadata', () => { document.getElementById('video').hidden = false; });
+    const showVideo = () => { document.getElementById('video').hidden = false; };
+    if (promo.readyState >= 1) showVideo(); else promo.addEventListener('loadedmetadata', showVideo);
 
     const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0, rootMargin: '0px 0px -8% 0px' });
     document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
