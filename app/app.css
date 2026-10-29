@@ -287,15 +287,11 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .iconbtn { width: 36px; height: 36px; border-radius: 18px; background: var(--grouped); display: grid; place-items: center; margin-bottom: 4px; }
 .iconbtn svg { width: 19px; height: 19px; color: var(--accent); }
 .avatar { border-radius: 50%; display: inline-grid; place-items: center; color: #fff; font-weight: 700; flex: none; letter-spacing: 0; }
-.flag { font-size: 1.05em; }
 .lb-screen { padding-bottom: calc(var(--tabbar) + 96px); }
 .lb-filters { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 4px; }
 .lb-filters .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
 .lb-filters .chips::-webkit-scrollbar { display: none; }
 .lb-filters .chips button { flex: none; display: inline-flex; align-items: center; gap: 6px; }
-.chips.scope button { background: transparent; border: 1px solid var(--grouped2); font-weight: 500; font-size: 14px; padding: 6px 12px; }
-.chips.scope button.on { background: var(--grouped2); color: var(--label); border-color: #48484a; }
-.chips.scope svg { width: 15px; height: 15px; }
 .lb-body { transition: opacity .2s; }
 .lb-body.busy { opacity: .5; }
 
@@ -368,10 +364,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .nhint { margin: 6px 4px 0; color: var(--label2); min-height: 17px; }
 .nhint.ok { color: var(--green); }
 .nhint.taken, .nhint.invalid { color: #ff8a80; }
-.country { position: relative; display: flex; align-items: center; gap: 12px; height: 52px; border-radius: 14px; background: var(--grouped2); padding: 0 14px; }
-.country .cflag { font-size: 24px; }
-.country select { flex: 1; appearance: none; -webkit-appearance: none; background: transparent; border: 0; color: var(--label); font: inherit; font-size: 17px; height: 100%; outline: none; }
-.country select option { background: var(--grouped); }
 .btn:disabled { opacity: .4; }
 
 .field.area { height: 150px; padding: 14px 16px; resize: none; line-height: 1.4; display: block; }

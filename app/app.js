@@ -2,7 +2,7 @@
 import * as E from './energy.js';
 import { Handle, bluetoothAvailable } from './handle.js';
 import { Engine, presets } from './engine.js';
-import { Account, accountsEnabled, flag, countryName, guessCountry, suggestName, validName, friendlyError } from './account.js';
+import { Account, accountsEnabled, suggestName, validName, friendlyError } from './account.js';
 
 // ================================================================= storage
 
@@ -271,7 +271,8 @@ const ui = { tab: 'summary', view: null, histRange: 'week', compareTab: 'activit
 const app = document.getElementById('app');
 const account = new Account();
 // Leaderboard filters and a short cache, so flipping between tabs doesn't refetch every time.
-const lb = { period: 'day', metric: 'jumps', scope: 'all', rows: null, key: '', at: 0, loading: false, error: null, cache: {} };
+// One global board: no countries.
+const lb = { period: 'day', metric: 'jumps', rows: null, key: '', at: 0, loading: false, error: null, cache: {} };
 
 handle.addEventListener('change', () => { if (!engine.s) render(); });
 account.addEventListener('change', () => { if (!engine.s) render(); });
@@ -620,15 +621,14 @@ function avatar(name, size = 40) {
 
 async function loadBoard(force = false) {
   if (!accountsEnabled) return;
-  const country = lb.scope === 'country' ? account.profile?.country || guessCountry() : null;
-  const key = `${lb.period}|${lb.metric}|${country || ''}`;
+  const key = `${lb.period}|${lb.metric}`;
   const hit = lb.cache[key];
   if (!force && hit && Date.now() - hit.at < 30000) { Object.assign(lb, { rows: hit.rows, key, error: null, loading: false }); return render(); }
   Object.assign(lb, { key, loading: true, error: null });
   if (lb.rows && lb.key !== key) lb.rows = null;
   render();
   try {
-    const rows = await account.leaderboard({ period: lb.period, metric: lb.metric, country });
+    const rows = await account.leaderboard({ period: lb.period, metric: lb.metric });
     lb.cache[key] = { rows, at: Date.now() };
     if (lb.key === key) Object.assign(lb, { rows, loading: false });
   } catch (e) {
@@ -639,7 +639,6 @@ async function loadBoard(force = false) {
 
 function renderLeaders() {
   const m = METRICS[lb.metric];
-  const myCountry = account.profile?.country || guessCountry();
   const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
   const right = `<button class="iconbtn press" data-act="lbRefresh" aria-label="Refresh">${icon('refresh')}</button>`;
   const rows = lb.rows || [];
@@ -651,14 +650,14 @@ function renderLeaders() {
   let body;
   if (lb.loading && !lb.rows) body = `<div class="card lb-list">${'<div class="lb-row skel"><i></i><i></i><i></i></div>'.repeat(6)}</div>`;
   else if (lb.error) body = `<div class="empty"><b>Couldn’t load the leaderboard</b>${esc(lb.error)}<div style="margin-top:18px"><button class="btn gray press" data-act="lbRefresh">Try Again</button></div></div>`;
-  else if (!rows.length) body = `<div class="empty"><div class="empty-icon">${icon('trophy')}</div><b>No jumps ${when}</b>${lb.scope === 'country' ? `Nobody in ${esc(countryName(myCountry))} is on the board ${when}.` : 'The board is wide open.'} Finish a workout to take the top spot.
+  else if (!rows.length) body = `<div class="empty"><div class="empty-icon">${icon('trophy')}</div><b>No jumps ${when}</b>The board is wide open. Finish a workout to take the top spot.
       <div style="margin-top:18px"><button class="btn press" data-act="start" data-arg="free">${icon('play')}Start Free Jump</button></div></div>`;
   else {
     const order = [top[1], top[0], top[2]].filter(Boolean);
     body = `<div class="podium ${top.length < 3 ? 'few' : ''}">${order.map((r) => `
         <button class="pod press ${r.is_me ? 'me' : ''} p${r.rank}" data-act="lbRow" data-arg="${r.user_id}">
           <div class="pod-av" style="--medal:${MEDALS[r.rank - 1]}">${avatar(r.username, r.rank === 1 ? 64 : 52)}<span class="medal num">${r.rank}</span></div>
-          <div class="pod-name">${esc(r.username)}${r.country ? ` <span class="flag">${flag(r.country)}</span>` : ''}</div>
+          <div class="pod-name">${esc(r.username)}</div>
           <div class="pod-val num" style="color:${m.color}">${fmt(r.value)}</div><div class="pod-unit">${m.unit}</div>
         </button>`).join('')}</div>
       ${rest.length ? `<div class="card lb-list">${rest.map(boardRow).join('')}</div>` : ''}`;
@@ -669,7 +668,6 @@ function renderLeaders() {
     <div class="seg" style="margin-top:4px">${PERIODS.map(([k, l]) => `<button data-act="lbPeriod" data-arg="${k}" class="${lb.period === k ? 'on' : ''}">${l}</button>`).join('')}</div>
     <div class="lb-filters">
       <div class="chips">${Object.entries(METRICS).map(([k, x]) => `<button data-act="lbMetric" data-arg="${k}" class="${lb.metric === k ? 'on' : ''}">${x.label}</button>`).join('')}</div>
-      ${myCountry ? `<div class="chips scope">${[['all', `${icon('globe')}Everyone`], ['country', `<span class="flag">${flag(myCountry)}</span>${esc(countryName(myCountry))}`]].map(([k, l]) => `<button data-act="lbScope" data-arg="${k}" class="${lb.scope === k ? 'on' : ''}">${l}</button>`).join('')}</div>` : ''}
     </div>
     <div class="lb-body ${lb.loading ? 'busy' : ''}">${body}</div>
   </div></div>
@@ -682,7 +680,7 @@ function boardRow(r) {
   const m = METRICS[lb.metric];
   return `<button class="lb-row press ${r.is_me ? 'me' : ''}" data-act="lbRow" data-arg="${r.user_id}">
     <span class="lb-rank num">${r.rank}</span>${avatar(r.username, 36)}
-    <span class="lb-name">${esc(r.username)}${r.is_me ? ' <span class="you">You</span>' : ''}${r.country ? ` <span class="flag">${flag(r.country)}</span>` : ''}</span>
+    <span class="lb-name">${esc(r.username)}${r.is_me ? ' <span class="you">You</span>' : ''}</span>
     <span class="lb-val num"><b style="color:${m.color}">${fmt(r.value)}</b><small>${m.unit}</small></span></button>`;
 }
 
@@ -720,7 +718,7 @@ function playerSheet(r) {
   const canReport = account.state === 'ready' && !r.is_me;
   openSheet(`<div class="center" style="margin-top:8px">${avatar(r.username, 72)}</div>
     <h3>${esc(r.username)}</h3>
-    <div class="sub">${r.country ? `${flag(r.country)} ${esc(countryName(r.country))} · ` : ''}#${r.rank} ${PERIODS.find(([k]) => k === lb.period)[1].toLowerCase()}</div>
+    <div class="sub">#${r.rank} ${PERIODS.find(([k]) => k === lb.period)[1].toLowerCase()}</div>
     <div class="card center" style="background:var(--grouped2)"><div class="num" style="font-size:40px;font-weight:800;color:${m.color}">${fmt(r.value)}</div><div class="muted">${m.unit} ${{ day: 'today', week: 'this week', all: 'all time' }[lb.period]}</div></div>
     ${canReport ? '<button class="btn red press" style="margin-top:16px" data-sheet="report">Report Name</button><p class="center small muted" style="margin:10px 0 0">Report names that are offensive or impersonate someone.</p>' : ''}`, (sh) => {
     sh.querySelector('[data-sheet="report"]')?.addEventListener('click', async () => {
@@ -749,18 +747,17 @@ function accountGroup() {
   const p = account.profile;
   const via = account.user?.app_metadata?.provider;
   const how = via === 'apple' ? 'Apple' : via === 'google' ? 'Google' : 'email';
-  return `<div class="account-card">${avatar(p.username, 56)}<div style="flex:1;min-width:0"><div class="acct-name">${esc(p.username)}${p.country ? ` <span class="flag">${flag(p.country)}</span>` : ''}</div>
+  return `<div class="account-card">${avatar(p.username, 56)}<div style="flex:1;min-width:0"><div class="acct-name">${esc(p.username)}</div>
       <div class="small muted acct-sub">Signed in with ${how}${account.user?.email && !/privaterelay/.test(account.user.email) ? ` · ${esc(account.user.email)}` : ''}</div></div></div>
     <div class="group" style="margin-top:12px">
       <button class="row-item" data-act="editName"><div class="tile" style="background:var(--accent)">${icon('person').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Username</span><span class="value">${esc(p.username)}</span>${icon('chevR', 'chev')}</button>
-      <button class="row-item" data-act="editName"><div class="tile" style="background:var(--blue)">${icon('globe')}</div><span class="title">Country</span><span class="value">${p.country ? `${flag(p.country)} ${esc(countryName(p.country))}` : 'Hidden'}</span>${icon('chevR', 'chev')}</button>
       <button class="row-item" data-act="tab" data-arg="leaders"><div class="tile" style="background:var(--yellow)">${icon('trophy').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Leaderboard</span>${icon('chevR', 'chev')}</button>
     </div>
     <div class="group" style="margin-top:12px">
       <button class="row-item plain" data-act="signout"><span class="title" style="color:var(--accent)">Sign Out</span></button>
       <button class="row-item plain" data-act="deleteAccount"><span class="title" style="color:var(--red)">Delete Account</span></button>
     </div>
-    <div class="group-footer">Your name, country and a summary of each workout (jumps, time, pace) are stored with your account for the leaderboard.</div>`;
+    <div class="group-footer">Your username and a summary of each workout (jumps, time, pace) are stored with your account for the leaderboard.</div>`;
 }
 
 /** One sheet for every way in: Apple, Google, or a 6-digit code by email. */
@@ -849,31 +846,23 @@ function waitForAccount() {
   });
 }
 
-// Every country Intl knows a name for, sorted by that name, for the country picker.
-const COUNTRIES = 'AD AE AF AG AI AL AM AO AR AS AT AU AW AZ BA BB BD BE BF BG BH BI BJ BM BN BO BR BS BT BW BY BZ CA CD CF CG CH CI CK CL CM CN CO CR CU CV CW CY CZ DE DJ DK DM DO DZ EC EE EG ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GH GI GL GM GN GP GQ GR GT GU GW GY HK HN HR HT HU ID IE IL IN IQ IR IS IT JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MG MH MK ML MM MN MO MQ MR MS MT MU MV MW MX MY MZ NA NC NE NG NI NL NO NP NR NZ OM PA PE PF PG PH PK PL PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SI SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TG TH TJ TL TM TN TO TR TT TV TW TZ UA UG US UY UZ VA VC VE VG VI VN VU WS XK YE ZA ZM ZW'.split(' ');
-
-/** Choose (or change) the name and flag shown on the leaderboard. */
+/** Choose (or change) the name shown on the leaderboard. */
 function nameSheet() {
   if (account.state !== 'needsName' && account.state !== 'ready') return;
   const editing = account.state === 'ready';
   let name = editing ? account.profile.username : suggestName(account.user);
-  let country = editing ? account.profile.country || '' : guessCountry() || '';
   let status = 'checking', busy = false, error = '', timer = null, seq = 0;
-  const options = COUNTRIES.map((c) => [c, countryName(c)]).sort((a, b) => a[1].localeCompare(b[1]));
   const sheet = openSheet(`<div class="auth">
     <div class="center" style="margin-top:6px" data-av></div>
     <h3>${editing ? 'Your leaderboard name' : 'Pick your name'}</h3>
     <div class="sub">${editing ? 'Change how you appear to other jumpers.' : 'This is how other jumpers will see you on the leaderboard.'}</div>
     <div class="namefield"><span class="at">@</span><input class="field" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(name)}"><span class="nstatus"></span></div>
     <div class="nhint small"></div>
-    <div class="label">Country</div>
-    <label class="country"><span class="cflag"></span><select>${`<option value="">Don’t show a flag</option>` + options.map(([c, n]) => `<option value="${c}" ${c === country ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>${icon('chevR', 'chev')}</label>
     <div class="auth-error" style="display:none"></div>
     <button class="btn press" style="margin-top:22px" data-save>${editing ? 'Save' : 'Join the Leaderboard'}</button></div>`);
-  const input = sheet.querySelector('input'), sel = sheet.querySelector('select');
+  const input = sheet.querySelector('input');
   const paint = () => {
     sheet.querySelector('[data-av]').innerHTML = avatar(name || '?', 72);
-    sheet.querySelector('.cflag').textContent = country ? flag(country) : '🏳️';
     const st = sheet.querySelector('.nstatus'), hint = sheet.querySelector('.nhint');
     st.innerHTML = status === 'ok' ? icon('check') : status === 'taken' || status === 'invalid' ? icon('xmark') : '';
     st.className = `nstatus ${status}`;
@@ -907,12 +896,11 @@ function nameSheet() {
   };
   input.addEventListener('input', () => { name = input.value.trim(); error = ''; check(); });
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sheet.querySelector('[data-save]').click(); });
-  sel.addEventListener('change', () => { country = sel.value; paint(); });
   sheet.querySelector('[data-save]').addEventListener('click', async () => {
     if (status !== 'ok' || busy) return;
     busy = true; error = ''; paint();
     try {
-      await account.saveProfile({ username: name, country });
+      await account.saveProfile({ username: name });
       closeSheet();
       lb.cache = {};
       if (editing) toast('Saved');
@@ -967,7 +955,7 @@ function feedbackSheet() {
 
 function deleteAccountSheet() {
   openSheet(`<h3>Delete your account?</h3>
-    <div class="sub">This removes your name, country and every workout summary from the leaderboard, for good. Workouts saved on this device stay here.</div>
+    <div class="sub">This removes your username and every workout summary from the leaderboard, for good. Workouts saved on this device stay here.</div>
     <button class="btn red press" data-sheet="yes">Delete Account</button>
     <button class="btn gray press" style="margin-top:10px" data-sheet="no">Cancel</button>`, (sh) => {
     sh.querySelector('[data-sheet="no"]').onclick = () => closeSheet();
@@ -1342,7 +1330,6 @@ app.addEventListener('click', (e) => {
     case 'deleteAccount': deleteAccountSheet(); break;
     case 'lbPeriod': lb.period = arg; loadBoard(); break;
     case 'lbMetric': lb.metric = arg; loadBoard(); break;
-    case 'lbScope': lb.scope = arg; loadBoard(); break;
     case 'lbRefresh': loadBoard(true); break;
     case 'lbRow': playerSheet(lb.rows?.find((r) => r.user_id === arg)); break;
     case 'connect': connectHandle(); break;

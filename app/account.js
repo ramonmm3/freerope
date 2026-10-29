@@ -42,19 +42,6 @@ export function bestMinute(s) {
   return Math.min(Math.round(best), s.jumps, 400);
 }
 
-/** The phone's country, for the flag next to a name and the country board. */
-export function guessCountry() {
-  try {
-    const region = new Intl.Locale(navigator.language).maximize().region;
-    if (/^[A-Z]{2}$/.test(region || '')) return region;
-  } catch { /* old browser */ }
-  return null;
-}
-export const flag = (cc) => cc ? String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65)) : '';
-export function countryName(cc) {
-  try { return new Intl.DisplayNames([navigator.language || 'en'], { type: 'region' }).of(cc); } catch { return cc; }
-}
-
 /** A leaderboard name from whatever the sign-in provider gave us: "Ramón Mendoza" → "ramon.mendoza". */
 export function suggestName(user) {
   const m = user?.user_metadata || {};
@@ -129,7 +116,7 @@ export class Account extends EventTarget {
     this.user = user;
     if (!user) { this.profile = null; this.state = 'signedOut'; this.emit(); return; }
     const sb = await client();
-    const { data } = await sb.from('profiles').select('id, username, country').eq('id', user.id).maybeSingle();
+    const { data } = await sb.from('profiles').select('id, username').eq('id', user.id).maybeSingle();
     this.profile = data || null;
     this.state = data ? 'ready' : 'needsName';
     this.emit();
@@ -177,10 +164,10 @@ export class Account extends EventTarget {
     return data;
   }
 
-  async saveProfile({ username, country }) {
+  async saveProfile({ username }) {
     const sb = await client();
-    const row = { id: this.user.id, username, country: country || null };
-    const { data, error } = await sb.from('profiles').upsert(row).select('id, username, country').single();
+    const row = { id: this.user.id, username, country: null };
+    const { data, error } = await sb.from('profiles').upsert(row).select('id, username').single();
     if (error) throw error;
     const first = this.state !== 'ready';
     this.profile = data;
@@ -252,9 +239,9 @@ export class Account extends EventTarget {
 
   // ------------------------------------------------------------------ leaderboards
 
-  async leaderboard({ period = 'day', metric = 'jumps', country = null, limit = 100 } = {}) {
+  async leaderboard({ period = 'day', metric = 'jumps', limit = 100 } = {}) {
     const sb = await client();
-    const { data, error } = await sb.rpc('leaderboard', { p_period: period, p_metric: metric, p_day: localDate(), p_country: country, p_limit: limit });
+    const { data, error } = await sb.rpc('leaderboard', { p_period: period, p_metric: metric, p_day: localDate(), p_country: null, p_limit: limit });
     if (error) throw error;
     return data.map((r) => ({ ...r, rank: Number(r.rank), value: Number(r.value) }));
   }
