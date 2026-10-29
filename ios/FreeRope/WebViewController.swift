@@ -24,6 +24,15 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         }
         controller.add(bridge, name: "ble")
         controller.add(auth, name: "auth")
+        #if DEBUG
+        // App Store screenshots (.github/workflows/ios.yml): FREEROPE_SHOT=<name> loads sample
+        // workouts and opens that screen. Debug builds only; never in the App Store app.
+        if let shot = ProcessInfo.processInfo.environment["FREEROPE_SHOT"],
+           let url = Bundle.main.url(forResource: "screenshots", withExtension: "js"),
+           let source = try? String(contentsOf: url) {
+            controller.addUserScript(WKUserScript(source: "window.FREEROPE_SHOT = \"\(shot)\";\n" + source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        #endif
 
         webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
