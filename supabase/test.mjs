@@ -6,10 +6,13 @@ import { citext } from '@electric-sql/pglite/contrib/citext';
 import fs from 'node:fs';
 
 const db = new PGlite({ extensions: { citext } });
-const migration = fs.readFileSync('C:/Crossrope/web/supabase/migrations/20261029000000_accounts_leaderboards.sql', 'utf8');
+// Every migration in order, from the folder next to this file.
+const dir = new URL('./migrations/', import.meta.url);
+const migration = fs.readdirSync(dir).sort().map((f) => fs.readFileSync(new URL(f, dir), 'utf8')).join('\n');
 
 await db.exec(`
   create schema auth;
+  set search_path = public, extensions;
   create table auth.users (id uuid primary key, email text);
   create function auth.uid() returns uuid language sql stable as
     $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
@@ -20,8 +23,6 @@ await db.exec(`
 await db.exec(migration);
 await db.exec(`
   grant usage on schema public to anon, authenticated;
-  grant all on all tables in schema public to anon, authenticated;
-  grant usage, select on all sequences in schema public to anon, authenticated;
 `);
 
 const U = { ana: '11111111-1111-1111-1111-111111111111', ben: '22222222-2222-2222-2222-222222222222', cat: '33333333-3333-3333-3333-333333333333', dan: '44444444-4444-4444-4444-444444444444', eve: '55555555-5555-5555-5555-555555555555' };
@@ -78,9 +79,8 @@ const dupId = 777;
 await W(U.ben, { client_id: dupId, jumps: 100, best_minute: 100, best_streak: 50, active_sec: 60, duration_sec: 60 });
 await fails(U.ben, `insert into workouts (user_id, client_id, started_at, local_date, mode, title, duration_sec, active_sec, jumps, avg_jpm) values ($1, ${dupId}, now(), current_date, 'FREE', 'x', 60, 60, 100, 100)`, [U.ben], 'the same workout cannot be uploaded twice', 'duplicate');
 ok((await as(U.ana, `select count(*)::int n from workouts`)).rows[0].n === 2, 'users only see their own workouts');
-ok((await as(null, `select count(*)::int n from workouts`)).rows[0].n === 0, 'signed-out visitors see no workouts');
-const upw = await as(U.ana, `update workouts set jumps = 99999 returning id`);
-ok(upw.rows.length === 0, 'workouts cannot be edited after upload');
+await fails(null, `select count(*)::int n from workouts`, [], 'signed-out visitors cannot read workouts at all', 'permission denied');
+await fails(U.ana, `update workouts set jumps = 99999 returning id`, [], 'workouts cannot be edited after upload', 'permission denied');
 
 // last week (counts for week, not today)
 const d3 = new Date(Date.now() - 3 * 86400000);
@@ -118,7 +118,7 @@ ok((await as(null, `select count(*)::int n from profiles where username = 'dan'`
 ok((await as(U.dan, `select count(*)::int n from profiles where username = 'dan'`)).rows[0].n === 1, 'hidden users still see their own profile');
 await as(U.dan, `update profiles set hidden = false where id = $1`, [U.dan]);
 ok((await as(null, `select count(*)::int n from profiles where username = 'dan'`)).rows[0].n === 0, 'hidden users cannot unhide themselves');
-ok((await as(U.ana, `select count(*)::int n from reports`)).rows[0].n === 0, 'reports are not readable');
+await fails(U.ana, `select count(*)::int n from reports`, [], 'reports are not readable', 'permission denied');
 await fails(null, `select report_user($1, null)`, [U.ana], 'signed-out visitors cannot report', 'permission denied');
 
 // --- account deletion
@@ -126,6 +126,20 @@ await fails(null, `select delete_my_account()`, [], 'signed-out visitors cannot 
 await as(U.cat, `select delete_my_account()`);
 const left = (await db.query(`select (select count(*)::int from auth.users where id = $1) u, (select count(*)::int from profiles where id = $1) p, (select count(*)::int from workouts where user_id = $1) w`, [U.cat])).rows[0];
 ok(left.u === 0 && left.p === 0 && left.w === 0, 'deleting an account removes the user, profile and workouts');
+
+// --- feedback
+const FB = (user, o = {}) => as(user, `insert into feedback (message, email, install_id, platform, app_version, user_id) values ($1, $2, $3, $4, $5, $6)`,
+  [o.message ?? 'Love it', o.email ?? null, o.install ?? 'install-aaaa', o.platform ?? 'web', '1.6', o.user_id ?? null]);
+await FB(null, { message: 'Count froze once at 2,000', email: 'x@y.com' });
+ok(true, 'signed-out visitors can send feedback');
+await FB(U.ana, { install: 'install-bbbb', user_id: U.ben });
+const fbRow = (await db.query(`select user_id, username from feedback where install_id = 'install-bbbb'`)).rows[0];
+ok(fbRow.user_id === U.ana && fbRow.username === 'ana_jumps', 'feedback records the real sender, not a spoofed one');
+await fails(null, `select * from feedback`, [], 'nobody can read feedback through the API', 'permission denied');
+await fails(U.ana, `select * from feedback`, [], 'signed-in users cannot read feedback either', 'permission denied');
+await fails(null, `insert into feedback (message, install_id, platform) values ('', 'install-cccc', 'web')`, [], 'empty feedback is rejected', 'check constraint');
+for (let i = 0; i < 5; i++) await FB(null, { install: 'install-dddd' });
+await fails(null, `insert into feedback (message, install_id, platform) values ('spam', 'install-dddd', 'web')`, [], 'a sixth message within an hour from one install is refused', 'rate_limited');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -4,7 +4,9 @@
 -- summary of each one (no raw pace data) so it can count on the leaderboards. Workouts are
 -- private; the public only sees usernames and leaderboard totals, through the functions below.
 
-create extension if not exists citext;
+-- Supabase keeps extensions in their own schema; functions below include it in their search_path.
+create schema if not exists extensions;
+create extension if not exists citext with schema extensions;
 
 -- ---------------------------------------------------------------------------- profiles
 
@@ -137,7 +139,7 @@ create or replace function public.leaderboard(
   p_country text default null,
   p_limit   integer default 100
 ) returns table (rank bigint, user_id uuid, username text, country text, value bigint, is_me boolean)
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, extensions as $$
   with scope as (
     select w.user_id,
            case p_metric
@@ -168,7 +170,7 @@ $$;
 -- ---------------------------------------------------------------------------- account helpers
 
 create or replace function public.username_available(p_name text) returns boolean
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, extensions as $$
   select p_name ~ '^[A-Za-z0-9_.]{3,20}$' and p_name !~ '^[._]|[._]$'
      and not exists (select 1 from profiles where username = p_name::citext and id <> coalesce(auth.uid(), '00000000-0000-0000-0000-000000000000'))
      and not exists (select 1 from reserved_usernames r where p_name::citext = r.name
@@ -196,7 +198,7 @@ create table public.reports (
 );
 
 create or replace function public.report_user(p_user uuid, p_reason text default null) returns void
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 begin
   if auth.uid() is null then raise exception 'not_signed_in' using errcode = '42501'; end if;
   if p_user = auth.uid() then return; end if;
@@ -213,6 +215,13 @@ alter table public.reserved_usernames enable row level security;
 create policy "reserved names are public" on public.reserved_usernames for select using (true);
 
 -- ---------------------------------------------------------------------------- grants
+
+-- New Supabase projects don't expose tables to the API by default; say exactly what each role may
+-- touch. Row-level security above still decides which rows.
+grant usage on schema public to anon, authenticated;
+grant select on public.profiles, public.reserved_usernames to anon, authenticated;
+grant insert, update on public.profiles to authenticated;
+grant select, insert, delete on public.workouts to authenticated;
 
 revoke all on function public.delete_my_account() from public, anon;
 revoke all on function public.report_user(uuid, text) from public, anon;

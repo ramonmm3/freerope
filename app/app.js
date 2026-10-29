@@ -128,6 +128,7 @@ const P = {
   units: '<path d="M3 7h18M3 12h12M3 17h6"/>',
   xmark: '<path d="M6 6l12 12M18 6L6 18"/>',
   heart: '<path d="M12 20.5s-7.5-4.6-9.2-9C1.5 8 3.6 4.5 7 4.5c2.1 0 3.5 1.2 5 3 1.5-1.8 2.9-3 5-3 3.4 0 5.5 3.5 4.2 7-1.7 4.4-9.2 9-9.2 9z" fill="currentColor" stroke="none"/>',
+  chat: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A2.5 2.5 0 0 1 4 13.5z"/>',
   trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4.5a3 3 0 0 0 3.5 4M16 6h3.5a3 3 0 0 1-3.5 4M12 13v4M8.5 20.5h7M10 17h4l.5 3.5h-5z"/>',
   refresh: '<path d="M20 11a8 8 0 0 0-14.5-4.5M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5M20 20v-4h-4"/>',
   mail: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7l8 6 8-6"/>',
@@ -501,6 +502,8 @@ function renderProfile() {
     </div>
     <div class="group" style="margin-top:22px"><div class="row-item"><div class="tile" style="background:var(--indigo)">${icon('flask')}</div><span class="title">Demo Handle</span>${sw(handle.demo, 'demo')}</div></div>
     <div class="group-footer">Simulates a handle so you can try workouts without a rope.</div>
+    <div class="group" style="margin-top:22px"><button class="row-item" data-act="feedback"><div class="tile" style="background:var(--teal)">${icon('chat')}</div><span class="title">Send Feedback</span>${icon('chevR', 'chev')}</button></div>
+    <div class="group-footer">Bugs, ideas, a jump count that looked off: it all goes straight to Ramón.</div>
     ${NATIVE ? '' : `<div class="group" style="margin-top:22px"><a class="row-item" href="${DONATE}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="tile" style="background:var(--pink)">${icon('heart')}</div><span class="title">Support FreeRope</span><span class="value">PayPal</span></a></div>
     <div class="group-footer">FreeRope costs nothing. Tips pay for the App Store ($99/year) and Play Store ($25) so it can be published properly and keep improving.</div>`}
     <p class="center small muted" style="margin-top:28px;line-height:1.5">FreeRope ${NATIVE ? 'for iPhone' : 'for Web'} 1.5<br>Works with Crossrope AMP handles. Not affiliated with Crossrope.<br>${account.state === 'ready' ? 'Your workouts are saved on this device and summarised to your account for the leaderboard.' : `Your workouts are stored only ${NATIVE ? 'on this phone' : 'in this browser'}.`}</p>
@@ -928,6 +931,40 @@ function nameSheet() {
   paint();
 }
 
+const APP_VERSION = '1.6';
+
+/** "Send Feedback": a message (and an optional email for a reply) to the developer. */
+function feedbackSheet() {
+  const mine = account.user?.email && !/privaterelay/.test(account.user.email) ? account.user.email : '';
+  const sheet = openSheet(`<div class="auth">
+    <h3>Send Feedback</h3><div class="sub">Bugs, ideas, anything. Ramón reads every message.</div>
+    <textarea class="field area" maxlength="2000" placeholder="What’s on your mind?"></textarea>
+    <input class="field" type="email" inputmode="email" autocomplete="email" placeholder="Your email (optional, for a reply)" value="${esc(mine)}" style="margin-top:10px">
+    <div class="auth-error" style="display:none"></div>
+    <button class="btn press" style="margin-top:16px" data-send>Send</button></div>`);
+  const text = sheet.querySelector('textarea'), mail = sheet.querySelector('input'), btn = sheet.querySelector('[data-send]'), err = sheet.querySelector('.auth-error');
+  setTimeout(() => text.focus(), 350);
+  btn.addEventListener('click', async () => {
+    const message = text.value.trim(), email = mail.value.trim();
+    const show = (m) => { err.textContent = m; err.style.display = m ? '' : 'none'; };
+    if (!message) return show('Write a message first.');
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return show('That email doesn’t look right. Leave it empty if you prefer.');
+    if (!accountsEnabled) {
+      // No backend configured: hand it to the mail app instead.
+      location.href = `mailto:ramonmm3@gmail.com?subject=${encodeURIComponent('FreeRope feedback')}&body=${encodeURIComponent(message)}`;
+      return closeSheet();
+    }
+    btn.disabled = true; btn.textContent = 'Sending…'; show('');
+    try {
+      await account.sendFeedback({ message, email, version: APP_VERSION });
+      closeSheet(); toast('Thanks! Your feedback was sent.');
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Send';
+      show(/rate_limited/.test(e?.message) ? 'You’ve sent a lot in the last hour. Try again later.' : friendlyError(e) || 'Couldn’t send it. Try again.');
+    }
+  });
+}
+
 function deleteAccountSheet() {
   openSheet(`<h3>Delete your account?</h3>
     <div class="sub">This removes your name, country and every workout summary from the leaderboard, for good. Workouts saved on this device stay here.</div>
@@ -1298,6 +1335,7 @@ app.addEventListener('click', (e) => {
   const a = b.dataset.act, arg = b.dataset.arg;
   switch (a) {
     case 'tab': ui.tab = arg; ui.view = null; render(); app.querySelector('.screen')?.scrollTo(0, 0); if (arg === 'leaders') loadBoard(); break;
+    case 'feedback': feedbackSheet(); break;
     case 'signin': signInSheet(); break;
     case 'editName': nameSheet(); break;
     case 'signout': account.signOut().then(() => { lb.cache = {}; toast('Signed out'); }); break;

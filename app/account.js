@@ -259,6 +259,18 @@ export class Account extends EventTarget {
     return data.map((r) => ({ ...r, rank: Number(r.rank), value: Number(r.value) }));
   }
 
+  /** Sends a message to the developer; works signed in or not (web/supabase/migrations/…_feedback.sql). */
+  async sendFeedback({ message, email, version }) {
+    const sb = await client();
+    let install = store.get('freerope.install', null);
+    if (!install) { install = (crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`); store.set('freerope.install', install); }
+    const { error } = await sb.from('feedback').insert({
+      message, email: email || null, install_id: install, platform: NATIVE === 'ios' ? 'ios' : 'web', app_version: version,
+      device: navigator.userAgent.slice(0, 120),
+    });
+    if (error) throw error;
+  }
+
   async report(userId, reason) {
     const sb = await client();
     const { error } = await sb.rpc('report_user', { p_user: userId, p_reason: reason || null });

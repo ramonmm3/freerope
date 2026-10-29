@@ -15,7 +15,19 @@ workout so it counts on the daily, weekly and all-time leaderboards.
 
 While `config.js` is empty, the app behaves exactly as before: no Leaderboard tab, no account rows.
 
-## Set up the project (about 30 minutes, once)
+## The live project
+
+- Project **freerope** (ref `ysjiwnvxilgjtwnmhxmi`, organization FreeRope, free plan):
+  https://supabase.com/dashboard/project/ysjiwnvxilgjtwnmhxmi
+- Both migrations are applied. `app/config.js` and `android/gradle.properties` point at it.
+- **Feedback** from the apps (Profile → Send Feedback): Table Editor → `feedback`
+  (https://supabase.com/dashboard/project/ysjiwnvxilgjtwnmhxmi/editor/17809). Nobody can read it
+  through the API; one install can send 5 messages an hour.
+- Redirect URLs are set (web app, `freerope://auth-callback`, `freeropepreview://auth-callback`, localhost).
+- Still to do: custom SMTP (needed before the 6-digit email code works, because Supabase only lets you
+  edit the email template with your own sender), then the Google and Apple providers (steps 3 and 4).
+
+## Set up a project from scratch (about 30 minutes, once)
 
 ### 1. Create the project
 1. Sign up at https://supabase.com (free plan) and create a project named **freerope**. Pick the
