@@ -618,8 +618,9 @@ function showNoBluetooth() {
   const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
   openSheet(`<h3>Bluetooth isn't available here</h3>
     <p class="sub">${ios ? 'Safari on iPhone can’t talk to Bluetooth devices. Open FreeRope in <b>Bluefy</b>, a free browser that can.' : 'This browser can’t talk to Bluetooth devices. Open FreeRope in <b>Google Chrome</b>.'}</p>
-    ${ios ? `<a class="btn press" style="text-decoration:none" href="https://apps.apple.com/app/id1492822055" target="_blank" rel="noopener">Get Bluefy (free)</a>
-    <p class="center small muted" style="margin:12px 0 0">In Bluefy, go to <b>${esc(location.host + location.pathname)}</b></p>` : ''}
+    ${ios ? `<a class="btn press" style="text-decoration:none" href="bluefy://open?url=${encodeURI(location.origin + location.pathname)}">Open in Bluefy</a>
+    <a class="btn gray press" style="text-decoration:none;margin-top:10px" href="https://apps.apple.com/app/id1492822055" target="_blank" rel="noopener">Get Bluefy (free)</a>
+    <p class="center small muted" style="margin:12px 0 0">Already in Safari with the beacio extension? Turn it on for this site and reload.</p>` : ''}
     <button class="btn gray press" style="margin-top:12px" data-sheet="demo">Try the Demo Instead</button>`, (sh) => {
     sh.querySelector('[data-sheet="demo"]').onclick = () => { handle.startDemo(); closeSheet(); toast('Demo handle connected'); };
   });

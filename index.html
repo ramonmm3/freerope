@@ -47,9 +47,9 @@
     .btn svg { width: 22px; height: 22px; }
     .note { color: var(--faint); font-size: 13px; margin-top: 14px; }
 
-    .phones { position: relative; height: 600px; }
-    .phone { position: absolute; width: 270px; aspect-ratio: 1179/2556; border-radius: 44px; background: #0a0a0a; padding: 10px; box-shadow: 0 0 0 1.5px #2a2a2c, 0 40px 80px rgba(0,0,0,.7), 0 0 120px rgba(166,255,0,.12); overflow: hidden; }
-    .phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 34px; display: block; background: #000; }
+    .phones { position: relative; height: 670px; }
+    .phone { position: absolute; width: 270px; aspect-ratio: 968/2250; box-sizing: content-box; border-radius: 34px; background: linear-gradient(145deg,#2c2c30,#0a0a0b 40%,#1b1b1e); padding: 9px; box-shadow: 0 0 0 1.5px #3a3a3e, 0 40px 80px rgba(0,0,0,.7), 0 0 120px rgba(166,255,0,.12); }
+    .phone img { width: 100%; height: 100%; object-fit: fill; border-radius: 24px; display: block; background: #000; }
     .phone.a { left: 50%; top: 0; transform: translateX(-30%) rotate(4deg); z-index: 2; }
     .phone.b { left: 50%; top: 60px; transform: translateX(-95%) rotate(-6deg); opacity: .9; }
 
@@ -75,11 +75,11 @@
     .panel.on { display: block; animation: fade .3s ease-out; }
     @keyframes fade { from { opacity: 0; transform: translateY(6px); } }
     .steps { list-style: none; padding: 0; margin: 24px 0 0; counter-reset: s; }
-    .steps li { position: relative; padding: 0 0 22px 52px; counter-increment: s; }
-    .steps li::before { content: counter(s); position: absolute; left: 0; top: -2px; width: 34px; height: 34px; border-radius: 50%; background: rgba(166,255,0,.14); color: var(--accent); display: grid; place-items: center; font-weight: 700; }
-    .steps li:not(:last-child)::after { content: ""; position: absolute; left: 16.5px; top: 38px; bottom: 4px; width: 1px; background: var(--line); }
-    .steps b { display: block; font-size: 17px; margin-bottom: 2px; }
-    .steps span { color: var(--muted); font-size: 15px; }
+    .steps > li { position: relative; padding: 0 0 22px 52px; counter-increment: s; }
+    .steps > li::before { content: counter(s); position: absolute; left: 0; top: -2px; width: 34px; height: 34px; border-radius: 50%; background: rgba(166,255,0,.14); color: var(--accent); display: grid; place-items: center; font-weight: 700; }
+    .steps > li:not(:last-child)::after { content: ""; position: absolute; left: 16.5px; top: 38px; bottom: 4px; width: 1px; background: var(--line); }
+    .steps > li > b { display: block; font-size: 17px; margin-bottom: 2px; }
+    .steps > li > span { color: var(--muted); font-size: 15px; }
     .big-btn { width: 100%; }
     .copy { display: flex; gap: 8px; margin-top: 10px; }
     .copy code { flex: 1; background: #000; border: .5px solid var(--line); border-radius: 12px; padding: 12px 14px; font: 15px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -87,6 +87,12 @@
     .qr { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
     .qr #qr { background: #fff; padding: 12px; border-radius: 16px; width: 184px; height: 184px; }
     .qr #qr img, .qr #qr svg { width: 160px; height: 160px; display: block; }
+    ol.sub { margin: 12px 0 4px; padding-left: 20px; color: var(--muted); font-size: 15px; }
+    ol.sub li { margin: 6px 0; padding: 0; }
+    ol.sub b { color: var(--text); }
+    details.alt { margin-top: 8px; background: rgba(255,255,255,.04); border: .5px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    details.alt summary { font-size: 15px; }
+    details.alt p { font-size: 14px; }
     .tip { background: rgba(255,159,10,.1); border: .5px solid rgba(255,159,10,.3); color: #ffcf80; border-radius: 14px; padding: 12px 14px; font-size: 14px; margin-top: 4px; }
 
     .support { text-align: center; background: radial-gradient(80% 120% at 50% 0%, rgba(166,255,0,.12), transparent 70%), var(--card); border: .5px solid var(--line); border-radius: 28px; padding: 44px 24px; max-width: 760px; margin: 0 auto; }
@@ -113,9 +119,9 @@
       .hero-grid { grid-template-columns: 1fr; text-align: center; }
       .lead { margin-left: auto; margin-right: auto; }
       .ctas { justify-content: center; }
-      .phones { height: 470px; margin-top: 10px; }
-      .phone { width: 210px; border-radius: 36px; }
-      .phone img { border-radius: 28px; }
+      .phones { height: 530px; margin-top: 10px; }
+      .phone { width: 210px; border-radius: 28px; padding: 7px; }
+      .phone img { border-radius: 20px; }
       .features { grid-template-columns: 1fr; }
       .get { padding: 22px 18px; }
       section { padding: 56px 0; }
@@ -184,14 +190,32 @@
       </div>
 
       <div class="panel" id="p-iphone">
-        <div class="tip">Apple's Safari can't talk to Bluetooth devices, so on iPhone FreeRope runs inside <b>Bluefy</b>, a free browser that can. It looks and works like an app.</div>
+        <div class="tip">Apple's Safari can't talk to Bluetooth devices, so on iPhone FreeRope runs inside <b>Bluefy</b>, a free browser that can. With step 3 you get a real FreeRope icon on your home screen that opens straight into it.</div>
         <ol class="steps">
-          <li><b>Get Bluefy (free)</b><span>From the App Store.</span><div style="margin-top:12px"><a class="btn primary" href="https://apps.apple.com/app/id1492822055" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>Get Bluefy</a></div></li>
-          <li><b>Open FreeRope in Bluefy</b><span>Open Bluefy, then paste this address into its address bar:</span><div class="copy"><code id="appUrl"></code><button data-copy>Copy</button></div></li>
-          <li><b>Bookmark it</b><span>Tap the star in Bluefy so FreeRope is one tap away next time.</span></li>
-          <li><b>Jump</b><span>Shake your handle to wake it, tap <i>Connect Handle</i> and pick <i>Crossrope Amp</i>.</span></li>
+          <li><b>Get Bluefy (free)</b><span>From the App Store. It's the browser FreeRope runs in.</span>
+            <div style="margin-top:12px"><a class="btn primary" href="https://apps.apple.com/app/id1492822055" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>Get Bluefy</a></div></li>
+          <li><b>Open FreeRope in Bluefy</b><span>Once Bluefy is installed, tap this button. It opens FreeRope directly in Bluefy.</span>
+            <div style="margin-top:12px"><a class="btn ghost" id="openBluefy" href="#">Open in Bluefy</a></div>
+            <span style="display:block;margin-top:10px;font-size:13px">Button not working? Open Bluefy and paste this address instead:</span>
+            <div class="copy"><code id="appUrl"></code><button data-copy="app">Copy</button></div></li>
+          <li><b>Put FreeRope on your home screen</b><span>Takes about a minute with Apple's free <i>Shortcuts</i> app (already on your iPhone; if you deleted it, it's free in the App Store).</span>
+            <ol class="sub">
+              <li>Save the FreeRope icon: tap <a href="app/icon-512.png" target="_blank" rel="noopener">this image</a>, touch and hold it, then tap <i>Save to Photos</i>.</li>
+              <li>Copy this link:<div class="copy"><code id="bfUrl"></code><button data-copy="bluefy">Copy</button></div></li>
+              <li>Open <b>Shortcuts</b> and tap <b>+</b> in the top-right corner.</li>
+              <li>Tap <b>Search Actions</b> (or <i>Add Action</i>), type <b>Open URLs</b> and tap it.</li>
+              <li>Tap the blue <b>URL</b> placeholder and paste the link you copied.</li>
+              <li>Tap the shortcut's name at the top, choose <b>Rename</b> and type <b>FreeRope</b>.</li>
+              <li>Tap the name again and choose <b>Add to Home Screen</b>.</li>
+              <li>Tap the small icon, choose <b>Choose Photo</b> and pick the FreeRope icon you saved. Tap <b>Add</b>.</li>
+            </ol>
+            <span style="display:block;margin-top:8px">Now FreeRope is on your home screen like any app. The first time you tap it, iPhone asks to open Bluefy: tap <i>Open</i> (or <i>Always Allow</i>).</span></li>
+          <li><b>Jump</b><span>Shake your handle to wake it, tap <i>Connect Handle</i> and pick <i>Crossrope Amp</i>. Your workouts are saved in Bluefy on your phone.</span></li>
         </ol>
-        <p class="note">On iOS 26.2 or newer you can also use Safari with the free <a href="https://apps.apple.com/app/id6761301368" target="_blank" rel="noopener">beacio</a> extension, which adds Bluetooth to Safari.</p>
+        <details class="alt"><summary>Prefer Safari? Use beacio (iOS 26.2 or newer)</summary>
+          <p><a href="https://apps.apple.com/app/id6761301368" target="_blank" rel="noopener">beacio</a> is a free extension that adds Bluetooth to Safari itself. Install it and follow its one-screen setup: in Safari tap <b>aA</b> → <b>Manage Extensions</b> → turn on <b>beacio</b>, then <b>aA</b> → <b>beacio</b> → <b>Always Allow</b> on every website. Then open <span class="appUrlText"></span> in Safari.</p>
+          <p>The catch: Bluetooth only works in a regular Safari tab, not from a home-screen icon, so you open FreeRope from a Safari bookmark each time. That's why Bluefy is the main route here.</p>
+        </details>
       </div>
 
       <div class="panel" id="p-computer">
@@ -223,6 +247,7 @@
     <div class="faq" style="margin-top:32px">
       <details><summary>Is it really free?</summary><p>Yes. No ads, no account, no subscription. It's a side project shared with r/jumprope.</p></details>
       <details><summary>Which handles work?</summary><p>Crossrope AMP handles (the smart handles that count jumps). FreeRope talks to the handle directly, so you don't need the Crossrope app or a membership. Non-AMP Crossrope handles have no sensor to count with, but the demo mode still lets you look around.</p></details>
+      <details><summary>Can I get it as a real app on iPhone?</summary><p>Almost. Installing a true app on iPhone without the App Store isn't possible for free: every route needs Apple's $99/year developer account, or sideloading tools that need a computer and expire every 7 days. The Bluefy route above gives you a FreeRope icon on your home screen that opens like an app. If donations cover the developer account, FreeRope goes into the App Store.</p></details>
       <details><summary>Why isn't it in the App Store or Play Store?</summary><p>Publishing to the stores costs $99 a year for Apple and $25 once for Google. Sharing it directly keeps it free for now. On Android you install the app file yourself; on iPhone it runs in Bluefy because Safari doesn't support Bluetooth. If enough people <a href="#support">chip in</a>, FreeRope goes into both stores.</p></details>
       <details><summary>Is it safe to install?</summary><p>Android shows the same warning for every app that doesn't come from the Play Store. FreeRope only asks for Bluetooth (to talk to your handle) and internet (only to check this site for updates). It has no account, no tracking, and your workouts never leave your phone.</p></details>
       <details><summary>How are calories calculated?</summary><p>From published jump rope oxygen-uptake studies and the 2024 Compendium of Physical Activities, scaled to your height, weight, age and sex. FreeRope adds the physical work of turning your rope, so heavier ropes count for more: about 11% more for a 1 lb rope than a ¼ lb one for an average adult. It's still an estimate (±10–15%), like any app without a heart-rate strap.</p></details>
@@ -253,10 +278,15 @@
     document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => show(b.dataset.tab)));
     show(platform);
 
-    document.querySelector('[data-copy]').addEventListener('click', async (e) => {
-      try { await navigator.clipboard.writeText(appUrl); e.target.textContent = 'Copied'; } catch { e.target.textContent = 'Select it'; }
-      setTimeout(() => (e.target.textContent = 'Copy'), 1800);
-    });
+    const bluefyUrl = 'bluefy://open?url=' + appUrl;
+    document.getElementById('bfUrl').textContent = bluefyUrl;
+    document.getElementById('openBluefy').href = bluefyUrl;
+    document.querySelectorAll('.appUrlText').forEach((el) => (el.textContent = appUrl.replace(/^https?:\/\//, '')));
+    document.querySelectorAll('[data-copy]').forEach((btn) => btn.addEventListener('click', async () => {
+      const text = btn.dataset.copy === 'bluefy' ? bluefyUrl : appUrl;
+      try { await navigator.clipboard.writeText(text); btn.textContent = 'Copied'; } catch { btn.textContent = 'Select it'; }
+      setTimeout(() => (btn.textContent = 'Copy'), 1800);
+    }));
 
     if (window.qrcode) {
       const q = qrcode(0, 'M'); q.addData(location.href.split('#')[0]); q.make();
