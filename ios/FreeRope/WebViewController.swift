@@ -5,6 +5,7 @@ import WebKit
 final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDelegate {
     static let scheme = "freerope"
     private let bridge = BluetoothBridge()
+    private let auth = AuthBridge()
     private var webView: WKWebView!
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
@@ -22,6 +23,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
             controller.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
         controller.add(bridge, name: "ble")
+        controller.add(auth, name: "auth")
 
         webView = WKWebView(frame: .zero, configuration: config)
         webView.isOpaque = false
@@ -34,6 +36,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         webView.uiDelegate = self
         bridge.webView = webView
         bridge.presenter = self
+        auth.webView = webView
         view = webView
     }
 

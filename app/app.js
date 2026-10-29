@@ -2,6 +2,7 @@
 import * as E from './energy.js';
 import { Handle, bluetoothAvailable } from './handle.js';
 import { Engine, presets } from './engine.js';
+import { Account, accountsEnabled, flag, countryName, guessCountry, suggestName, validName, friendlyError } from './account.js';
 
 // ================================================================= storage
 
@@ -126,7 +127,16 @@ const P = {
   star: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" fill="currentColor" stroke="none"/>',
   units: '<path d="M3 7h18M3 12h12M3 17h6"/>',
   heart: '<path d="M12 20.5s-7.5-4.6-9.2-9C1.5 8 3.6 4.5 7 4.5c2.1 0 3.5 1.2 5 3 1.5-1.8 2.9-3 5-3 3.4 0 5.5 3.5 4.2 7-1.7 4.4-9.2 9-9.2 9z" fill="currentColor" stroke="none"/>',
+  trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4.5a3 3 0 0 0 3.5 4M16 6h3.5a3 3 0 0 1-3.5 4M12 13v4M8.5 20.5h7M10 17h4l.5 3.5h-5z"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.5-4.5M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5M20 20v-4h-4"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7l8 6 8-6"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9S9.5 5.5 12 3z"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  xmark: '<path d="M6 6l12 12M18 6L6 18"/>',
+  apple: '<path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z" fill="currentColor" stroke="none"/>',
 };
+// Google's "G", in its own colours (their branding guidelines ask for it unaltered).
+const GOOGLE_G = '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.6 12.3c0-.8-.1-1.6-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.8h3.6c2.1-1.9 3.3-4.8 3.3-8.1z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.8c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.9A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7H2.1a11 11 0 0 0 0 9.9z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2A11 11 0 0 0 2.1 7l3.7 2.9C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
 // Set by the iOS app's bridge (ios/FreeRope/bridge.js); Apple doesn't allow PayPal tips in apps.
 const NATIVE = window.FREEROPE_NATIVE || null;
 const DONATE = 'https://www.paypal.com/donate/?business=ramonmm3%40gmail.com&item_name=Help+FreeRope+reach+the+App+Store+and+Play+Store&currency_code=USD';
@@ -258,8 +268,25 @@ const handle = new Handle();
 const engine = new Engine(handle, cues, () => profile);
 const ui = { tab: 'summary', view: null, histRange: 'week', compareTab: 'activities', food: 0 };
 const app = document.getElementById('app');
+const account = new Account();
+// Leaderboard filters and a short cache, so flipping between tabs doesn't refetch every time.
+const lb = { period: 'day', metric: 'jumps', scope: 'all', rows: null, key: '', at: 0, loading: false, error: null, cache: {} };
 
 handle.addEventListener('change', () => { if (!engine.s) render(); });
+account.addEventListener('change', () => { if (!engine.s) render(); });
+account.addEventListener('ready', () => syncNow());
+window.addEventListener('online', () => syncNow());
+
+/** Uploads any workouts the account hasn't seen yet; quiet unless asked, since it runs in the background. */
+async function syncNow(announce = false) {
+  try {
+    const n = await account.sync(sessions);
+    if (n) { lb.cache = {}; if (announce) toast(`${n} workout${n === 1 ? '' : 's'} added to the leaderboard`); }
+    return n;
+  } catch {
+    return 0; // offline or the server said no: try again next time
+  }
+}
 
 engine.addEventListener('finished', (e) => {
   const s = e.detail;
@@ -274,7 +301,18 @@ engine.addEventListener('finished', (e) => {
   releaseWakeLock();
   closeLive();
   render();
+  if (s.jumps > 0 && !handle.demo && account.state === 'ready') showTodayRank(s);
 });
+
+/** After a workout: upload it, then tell the jumper where it puts them today. */
+async function showTodayRank(s) {
+  await syncNow();
+  try {
+    const rows = await account.leaderboard({ period: 'day', metric: 'jumps', limit: 3 });
+    const me = rows.find((r) => r.is_me);
+    if (me && ui.view?.type === 'summary' && ui.view.session === s) { ui.view.rank = me; render(); }
+  } catch { /* offline: the summary is complete without it */ }
+}
 
 // ================================================================= render
 
@@ -282,7 +320,7 @@ function render() {
   if (!profile.onboarded) return renderOnboarding();
   let html;
   if (ui.view?.type === 'detail' || ui.view?.type === 'summary') html = renderDetail();
-  else html = { summary: renderSummary, workouts: renderWorkouts, history: renderHistory, profile: renderProfile }[ui.tab]();
+  else html = { summary: renderSummary, workouts: renderWorkouts, history: renderHistory, leaders: renderLeaders, profile: renderProfile }[ui.tab]();
   const scroller = app.querySelector('.screen');
   const keep = scroller && scroller.dataset.key === screenKey() ? scroller.scrollTop : 0;
   app.innerHTML = html + (ui.view ? '' : tabbar());
@@ -293,7 +331,8 @@ function render() {
 const screenKey = () => ui.view ? `${ui.view.type}:${ui.view.session?.id}` : ui.tab;
 
 function tabbar() {
-  const t = [['summary', 'rings', 'Summary'], ['workouts', 'dumbbell', 'Workouts'], ['history', 'calendar', 'History'], ['profile', 'person', 'Profile']];
+  const t = [['summary', 'rings', 'Summary'], ['workouts', 'dumbbell', 'Workouts'], ['history', 'calendar', 'History'],
+    ...(accountsEnabled ? [['leaders', 'trophy', 'Leaderboard']] : []), ['profile', 'person', 'Profile']];
   return `<nav class="tabbar">${t.map(([k, ic, l]) => `<button data-act="tab" data-arg="${k}" class="${ui.tab === k ? 'on' : ''}">${icon(ic)}<span>${l}</span></button>`).join('')}</nav>`;
 }
 
@@ -433,6 +472,7 @@ function ropeNote() {
 function renderProfile() {
   const st = handle.state;
   return `<div class="screen">${nav('Profile')}<div class="wrap">
+    ${accountGroup()}
     <div class="group-header">Handle</div>
     <div class="group">
       <div class="row-item"><div class="tile" style="background:var(--blue)">${icon('bt')}</div><span class="title">${st === 'connected' ? esc(handle.name) : 'Crossrope AMP'}</span><span class="value">${st === 'connected' ? 'Connected' : st === 'connecting' ? 'Connecting…' : 'Not Connected'}</span></div>
@@ -463,7 +503,7 @@ function renderProfile() {
     <div class="group-footer">Simulates a handle so you can try workouts without a rope.</div>
     ${NATIVE ? '' : `<div class="group" style="margin-top:22px"><a class="row-item" href="${DONATE}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="tile" style="background:var(--pink)">${icon('heart')}</div><span class="title">Support FreeRope</span><span class="value">PayPal</span></a></div>
     <div class="group-footer">FreeRope costs nothing. Tips pay for the App Store ($99/year) and Play Store ($25) so it can be published properly and keep improving.</div>`}
-    <p class="center small muted" style="margin-top:28px;line-height:1.5">FreeRope ${NATIVE ? 'for iPhone' : 'for Web'} 1.5<br>Works with Crossrope AMP handles. Not affiliated with Crossrope.<br>Your workouts are stored only ${NATIVE ? 'on this phone' : 'in this browser'}.</p>
+    <p class="center small muted" style="margin-top:28px;line-height:1.5">FreeRope ${NATIVE ? 'for iPhone' : 'for Web'} 1.5<br>Works with Crossrope AMP handles. Not affiliated with Crossrope.<br>${account.state === 'ready' ? 'Your workouts are saved on this device and summarised to your account for the leaderboard.' : `Your workouts are stored only ${NATIVE ? 'on this phone' : 'in this browser'}.`}</p>
   </div></div>`;
 }
 
@@ -483,6 +523,7 @@ function renderDetail() {
     <div class="head">${badge(s.mode)}<div><h1>${esc(s.title)}</h1><div class="muted">${dayLabel(s.startedAt)} · ${timeLabel(s.startedAt)} – ${timeLabel(end)}</div></div></div>
     ${v.type === 'summary' && v.demo ? '<div class="banner">Demo workout · not saved to your history</div>' : ''}
     ${(v.newBests || []).map((b) => `<div class="newbest">${icon('star').replace('<svg', '<svg style="width:18px;height:18px"')} New personal best · ${b}</div>`).join('')}
+    ${v.type === 'summary' && !v.demo ? rankCard(v) : ''}
     <div class="section">Workout Details</div>
     <div class="card"><div class="grid2">
       ${g('Workout Time', clock(s.durationSec), '', 'var(--yellow)')}${g('Jumps', fmt(s.jumps), '', 'var(--accent)')}
@@ -555,6 +596,350 @@ function bindCharts() {
   el.addEventListener('pointermove', move);
   el.addEventListener('pointerdown', move);
   el.addEventListener('touchmove', move, { passive: true });
+}
+
+// ================================================================= leaderboard
+
+const METRICS = {
+  jumps: { label: 'Jumps', unit: 'jumps', color: 'var(--accent)' },
+  minute: { label: 'Best Minute', unit: 'in 1 min', color: 'var(--teal)' },
+  streak: { label: 'Longest Streak', unit: 'in a row', color: 'var(--pink)' },
+};
+const PERIODS = [['day', 'Today'], ['week', 'This Week'], ['all', 'All Time']];
+const MEDALS = ['#ffd60a', '#d1d1d6', '#ff9f0a'];
+
+/** A coloured circle with the first letter, the same colour for a name every time. */
+function avatar(name, size = 40) {
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) % 360;
+  return `<span class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.42)}px;background:hsl(${h} 55% 32%)">${esc(name[0].toUpperCase())}</span>`;
+}
+
+async function loadBoard(force = false) {
+  if (!accountsEnabled) return;
+  const country = lb.scope === 'country' ? account.profile?.country || guessCountry() : null;
+  const key = `${lb.period}|${lb.metric}|${country || ''}`;
+  const hit = lb.cache[key];
+  if (!force && hit && Date.now() - hit.at < 30000) { Object.assign(lb, { rows: hit.rows, key, error: null, loading: false }); return render(); }
+  Object.assign(lb, { key, loading: true, error: null });
+  if (lb.rows && lb.key !== key) lb.rows = null;
+  render();
+  try {
+    const rows = await account.leaderboard({ period: lb.period, metric: lb.metric, country });
+    lb.cache[key] = { rows, at: Date.now() };
+    if (lb.key === key) Object.assign(lb, { rows, loading: false });
+  } catch (e) {
+    if (lb.key === key) Object.assign(lb, { loading: false, error: friendlyError(e) || 'Couldn’t load the leaderboard.' });
+  }
+  if (ui.tab === 'leaders' && !ui.view) render();
+}
+
+function renderLeaders() {
+  const m = METRICS[lb.metric];
+  const myCountry = account.profile?.country || guessCountry();
+  const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const right = `<button class="iconbtn press" data-act="lbRefresh" aria-label="Refresh">${icon('refresh')}</button>`;
+  const rows = lb.rows || [];
+  const me = rows.find((r) => r.is_me);
+  const top = rows.filter((r) => r.rank <= 3).slice(0, 3);
+  const rest = rows.filter((r) => !top.includes(r));
+  const when = { day: 'today', week: 'this week', all: 'yet' }[lb.period];
+
+  let body;
+  if (lb.loading && !lb.rows) body = `<div class="card lb-list">${'<div class="lb-row skel"><i></i><i></i><i></i></div>'.repeat(6)}</div>`;
+  else if (lb.error) body = `<div class="empty"><b>Couldn’t load the leaderboard</b>${esc(lb.error)}<div style="margin-top:18px"><button class="btn gray press" data-act="lbRefresh">Try Again</button></div></div>`;
+  else if (!rows.length) body = `<div class="empty"><div class="empty-icon">${icon('trophy')}</div><b>No jumps ${when}</b>${lb.scope === 'country' ? `Nobody in ${esc(countryName(myCountry))} is on the board ${when}.` : 'The board is wide open.'} Finish a workout to take the top spot.
+      <div style="margin-top:18px"><button class="btn press" data-act="start" data-arg="free">${icon('play')}Start Free Jump</button></div></div>`;
+  else {
+    const order = [top[1], top[0], top[2]].filter(Boolean);
+    body = `<div class="podium ${top.length < 3 ? 'few' : ''}">${order.map((r) => `
+        <button class="pod press ${r.is_me ? 'me' : ''} p${r.rank}" data-act="lbRow" data-arg="${r.user_id}">
+          <div class="pod-av" style="--medal:${MEDALS[r.rank - 1]}">${avatar(r.username, r.rank === 1 ? 64 : 52)}<span class="medal num">${r.rank}</span></div>
+          <div class="pod-name">${esc(r.username)}${r.country ? ` <span class="flag">${flag(r.country)}</span>` : ''}</div>
+          <div class="pod-val num" style="color:${m.color}">${fmt(r.value)}</div><div class="pod-unit">${m.unit}</div>
+        </button>`).join('')}</div>
+      ${rest.length ? `<div class="card lb-list">${rest.map(boardRow).join('')}</div>` : ''}`;
+  }
+
+  return `<div class="screen lb-screen">${nav('Leaderboard', date, right)}<div class="wrap">
+    ${joinCard()}
+    <div class="seg" style="margin-top:4px">${PERIODS.map(([k, l]) => `<button data-act="lbPeriod" data-arg="${k}" class="${lb.period === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+    <div class="lb-filters">
+      <div class="chips">${Object.entries(METRICS).map(([k, x]) => `<button data-act="lbMetric" data-arg="${k}" class="${lb.metric === k ? 'on' : ''}">${x.label}</button>`).join('')}</div>
+      ${myCountry ? `<div class="chips scope">${[['all', `${icon('globe')}Everyone`], ['country', `<span class="flag">${flag(myCountry)}</span>${esc(countryName(myCountry))}`]].map(([k, l]) => `<button data-act="lbScope" data-arg="${k}" class="${lb.scope === k ? 'on' : ''}">${l}</button>`).join('')}</div>` : ''}
+    </div>
+    <div class="lb-body ${lb.loading ? 'busy' : ''}">${body}</div>
+  </div></div>
+  ${account.state === 'ready' && lb.rows ? `<div class="me-bar">${me
+    ? `${avatar(me.username, 34)}<div style="flex:1;min-width:0"><b>You’re #${me.rank}</b><div class="small muted">${fmt(me.value)} ${m.unit} ${when === 'yet' ? 'all time' : when}</div></div><span class="num me-rank">#${me.rank}</span>`
+    : `${avatar(account.profile.username, 34)}<div style="flex:1"><b>You’re not on this board yet</b><div class="small muted">Finish a workout ${lb.period === 'all' ? '' : when} to get on it.</div></div>`}</div>` : ''}`;
+}
+
+function boardRow(r) {
+  const m = METRICS[lb.metric];
+  return `<button class="lb-row press ${r.is_me ? 'me' : ''}" data-act="lbRow" data-arg="${r.user_id}">
+    <span class="lb-rank num">${r.rank}</span>${avatar(r.username, 36)}
+    <span class="lb-name">${esc(r.username)}${r.is_me ? ' <span class="you">You</span>' : ''}${r.country ? ` <span class="flag">${flag(r.country)}</span>` : ''}</span>
+    <span class="lb-val num"><b style="color:${m.color}">${fmt(r.value)}</b><small>${m.unit}</small></span></button>`;
+}
+
+/** The invitation at the top of the board, until the jumper is on it. */
+function joinCard() {
+  if (account.state === 'signedOut') {
+    return `<button class="join press" data-act="signin"><div class="join-icon">${icon('trophy')}</div>
+      <div style="flex:1;text-align:left"><b>Get on the leaderboard</b><div class="small">Sign in to post your jumps and see where you rank. Takes 10 seconds.</div></div>${icon('chevR', 'chev')}</button>`;
+  }
+  if (account.state === 'needsName') {
+    return `<button class="join press" data-act="editName"><div class="join-icon">${icon('person')}</div>
+      <div style="flex:1;text-align:left"><b>Pick your leaderboard name</b><div class="small">One last step and you’re on the board.</div></div>${icon('chevR', 'chev')}</button>`;
+  }
+  return '';
+}
+
+/** On the workout summary: where this workout puts you today, or an invite to find out. */
+function rankCard(v) {
+  if (!accountsEnabled) return '';
+  if (account.state === 'ready') {
+    if (!v.rank) return '';
+    return `<button class="rank-card press" data-act="tab" data-arg="leaders"><div class="join-icon">${icon('trophy')}</div>
+      <div style="flex:1;text-align:left"><b>#${v.rank.rank} on today’s leaderboard</b><div class="small muted">${fmt(v.rank.value)} jumps today</div></div>${icon('chevR', 'chev')}</button>`;
+  }
+  if (account.state === 'signedOut') {
+    return `<button class="rank-card press" data-act="signin"><div class="join-icon">${icon('trophy')}</div>
+      <div style="flex:1;text-align:left"><b>See where you rank today</b><div class="small muted">Sign in to put this workout on the leaderboard.</div></div>${icon('chevR', 'chev')}</button>`;
+  }
+  return '';
+}
+
+function playerSheet(r) {
+  if (!r) return;
+  const m = METRICS[lb.metric];
+  const canReport = account.state === 'ready' && !r.is_me;
+  openSheet(`<div class="center" style="margin-top:8px">${avatar(r.username, 72)}</div>
+    <h3>${esc(r.username)}</h3>
+    <div class="sub">${r.country ? `${flag(r.country)} ${esc(countryName(r.country))} · ` : ''}#${r.rank} ${PERIODS.find(([k]) => k === lb.period)[1].toLowerCase()}</div>
+    <div class="card center" style="background:var(--grouped2)"><div class="num" style="font-size:40px;font-weight:800;color:${m.color}">${fmt(r.value)}</div><div class="muted">${m.unit} ${{ day: 'today', week: 'this week', all: 'all time' }[lb.period]}</div></div>
+    ${canReport ? '<button class="btn red press" style="margin-top:16px" data-sheet="report">Report Name</button><p class="center small muted" style="margin:10px 0 0">Report names that are offensive or impersonate someone.</p>' : ''}`, (sh) => {
+    sh.querySelector('[data-sheet="report"]')?.addEventListener('click', async () => {
+      if (!confirm(`Report “${r.username}” as offensive or impersonating someone?`)) return;
+      try { await account.report(r.user_id); closeSheet(); toast('Thanks. We’ll take a look.'); } catch (e) { toast(friendlyError(e) || 'Couldn’t send the report.'); }
+    });
+  });
+}
+
+// ================================================================= account
+
+function accountGroup() {
+  if (!accountsEnabled) return '';
+  const s = account.state;
+  if (s === 'loading') return `<div class="group-header">Account</div><div class="group"><div class="row-item"><span class="title muted">Loading…</span></div></div>`;
+  if (s === 'signedOut') {
+    return `<div class="group-header">Account</div>
+      <div class="group"><button class="row-item" data-act="signin"><div class="tile" style="background:var(--yellow)">${icon('trophy').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Sign In</span><span class="value">Join the leaderboard</span>${icon('chevR', 'chev')}</button></div>
+      <div class="group-footer">Use Apple, Google or your email. Your workouts stay on this device either way; signing in adds a summary of each one to the leaderboard.</div>`;
+  }
+  if (s === 'needsName') {
+    return `<div class="group-header">Account</div>
+      <div class="group"><button class="row-item" data-act="editName"><div class="tile" style="background:var(--accent)">${icon('person').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Pick Your Leaderboard Name</span>${icon('chevR', 'chev')}</button>
+      <button class="row-item plain" data-act="signout"><span class="title" style="color:var(--red)">Sign Out</span></button></div>`;
+  }
+  const p = account.profile;
+  const via = account.user?.app_metadata?.provider;
+  const how = via === 'apple' ? 'Apple' : via === 'google' ? 'Google' : 'email';
+  return `<div class="account-card">${avatar(p.username, 56)}<div style="flex:1;min-width:0"><div class="acct-name">${esc(p.username)}${p.country ? ` <span class="flag">${flag(p.country)}</span>` : ''}</div>
+      <div class="small muted acct-sub">Signed in with ${how}${account.user?.email && !/privaterelay/.test(account.user.email) ? ` · ${esc(account.user.email)}` : ''}</div></div></div>
+    <div class="group" style="margin-top:12px">
+      <button class="row-item" data-act="editName"><div class="tile" style="background:var(--accent)">${icon('person').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Name</span><span class="value">${esc(p.username)}</span>${icon('chevR', 'chev')}</button>
+      <button class="row-item" data-act="editName"><div class="tile" style="background:var(--blue)">${icon('globe')}</div><span class="title">Country</span><span class="value">${p.country ? `${flag(p.country)} ${esc(countryName(p.country))}` : 'Hidden'}</span>${icon('chevR', 'chev')}</button>
+      <button class="row-item" data-act="tab" data-arg="leaders"><div class="tile" style="background:var(--yellow)">${icon('trophy').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Leaderboard</span>${icon('chevR', 'chev')}</button>
+    </div>
+    <div class="group" style="margin-top:12px">
+      <button class="row-item plain" data-act="signout"><span class="title" style="color:var(--accent)">Sign Out</span></button>
+      <button class="row-item plain" data-act="deleteAccount"><span class="title" style="color:var(--red)">Delete Account</span></button>
+    </div>
+    <div class="group-footer">Your name, country and a summary of each workout (jumps, time, pace) are stored with your account for the leaderboard.</div>`;
+}
+
+/** One sheet for every way in: Apple, Google, or a 6-digit code by email. */
+function signInSheet() {
+  let step = 'pick', email = '', busy = false, error = '';
+  const sheet = openSheet('<div class="auth"></div>');
+  const box = sheet.querySelector('.auth');
+  const draw = () => {
+    if (step === 'pick') {
+      box.innerHTML = `<div class="auth-hero">${icon('trophy')}</div>
+        <h3>Join the leaderboard</h3>
+        <div class="sub">Post your jumps, see where you rank today and race jumpers everywhere. Your workouts still stay on your phone.</div>
+        <button class="abtn apple press" data-p="apple">${icon('apple')}Continue with Apple</button>
+        <button class="abtn google press" data-p="google">${GOOGLE_G}Continue with Google</button>
+        <button class="abtn email press" data-p="email">${icon('mail')}Continue with Email</button>
+        ${error ? `<div class="auth-error">${esc(error)}</div>` : ''}
+        <p class="center small muted" style="margin:16px 8px 0;line-height:1.4">No password needed. You can delete your account any time in Profile. <a href="../privacy.html" target="_blank" rel="noopener" style="color:var(--label2)">Privacy</a></p>`;
+    } else if (step === 'email') {
+      box.innerHTML = `<button class="back press" data-back>${icon('chevL').replace('<svg', '<svg style="width:20px;height:20px"')}Back</button>
+        <h3>What’s your email?</h3><div class="sub">We’ll send you a 6-digit code. No password to remember.</div>
+        <input class="field" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="${esc(email)}" autofocus>
+        ${error ? `<div class="auth-error">${esc(error)}</div>` : ''}
+        <button class="btn press" style="margin-top:16px" data-send ${busy ? 'disabled' : ''}>${busy ? 'Sending…' : 'Send Code'}</button>`;
+      const f = box.querySelector('input');
+      f.focus();
+      f.addEventListener('keydown', (e) => { if (e.key === 'Enter') box.querySelector('[data-send]').click(); });
+    } else {
+      box.innerHTML = `<button class="back press" data-back>${icon('chevL').replace('<svg', '<svg style="width:20px;height:20px"')}Back</button>
+        <h3>Check your email</h3><div class="sub">Enter the 6-digit code we sent to<br><b style="color:var(--label)">${esc(email)}</b></div>
+        <input class="field code num" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" autofocus>
+        ${error ? `<div class="auth-error">${esc(error)}</div>` : ''}
+        <button class="btn press" style="margin-top:16px" data-verify ${busy ? 'disabled' : ''}>${busy ? 'Checking…' : 'Sign In'}</button>
+        <button class="center muted small" style="display:block;margin:14px auto 0;padding:6px" data-resend>Didn’t get it? Send again</button>`;
+      const f = box.querySelector('input');
+      f.focus();
+      // Six digits in (typed, pasted or filled from the email by the keyboard) signs in straight away.
+      f.addEventListener('input', () => { f.value = f.value.replace(/\D/g, '').slice(0, 6); if (f.value.length === 6) box.querySelector('[data-verify]').click(); });
+    }
+  };
+  const done = () => {
+    closeSheet();
+    if (account.state === 'needsName') setTimeout(nameSheet, 420);
+    else { toast(`Welcome back, ${account.profile.username}`); syncNow(true); }
+  };
+  box.addEventListener('click', async (e) => {
+    const b = e.target.closest('button');
+    if (!b || busy) return;
+    error = '';
+    if (b.dataset.back !== undefined) { step = step === 'code' ? 'email' : 'pick'; return draw(); }
+    if (b.dataset.p === 'email') { step = 'email'; return draw(); }
+    if (b.dataset.p) {
+      busy = true; b.classList.add('loading');
+      try {
+        if (!NATIVE) sessionStorage.setItem('freerope.afterSignIn', '1');
+        await account.signInWith(b.dataset.p);
+        if (NATIVE) { await waitForAccount(); done(); }
+      } catch (err) {
+        sessionStorage.removeItem('freerope.afterSignIn');
+        error = friendlyError(err); busy = false; draw();
+      }
+      return;
+    }
+    if (b.dataset.send !== undefined || b.dataset.resend !== undefined) {
+      if (step === 'email') email = box.querySelector('input').value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { error = 'That doesn’t look like an email address.'; return draw(); }
+      busy = true; draw();
+      try { await account.sendCode(email); step = 'code'; if (b.dataset.resend !== undefined) toast('New code sent'); } catch (err) { error = friendlyError(err); }
+      busy = false; return draw();
+    }
+    if (b.dataset.verify !== undefined) {
+      const code = box.querySelector('input').value.trim();
+      if (code.length !== 6) { error = 'Enter all 6 digits.'; return draw(); }
+      busy = true; draw();
+      try { await account.verifyCode(email, code); done(); } catch (err) { error = friendlyError(err); busy = false; draw(); }
+    }
+  });
+  draw();
+}
+
+/** Waits for the profile lookup that follows a sign-in. */
+function waitForAccount() {
+  return new Promise((res) => {
+    if (account.state === 'ready' || account.state === 'needsName') return res();
+    const on = () => { if (account.state === 'ready' || account.state === 'needsName') { account.removeEventListener('change', on); res(); } };
+    account.addEventListener('change', on);
+  });
+}
+
+// Every country Intl knows a name for, sorted by that name, for the country picker.
+const COUNTRIES = 'AD AE AF AG AI AL AM AO AR AS AT AU AW AZ BA BB BD BE BF BG BH BI BJ BM BN BO BR BS BT BW BY BZ CA CD CF CG CH CI CK CL CM CN CO CR CU CV CW CY CZ DE DJ DK DM DO DZ EC EE EG ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GH GI GL GM GN GP GQ GR GT GU GW GY HK HN HR HT HU ID IE IL IN IQ IR IS IT JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MG MH MK ML MM MN MO MQ MR MS MT MU MV MW MX MY MZ NA NC NE NG NI NL NO NP NR NZ OM PA PE PF PG PH PK PL PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SI SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TG TH TJ TL TM TN TO TR TT TV TW TZ UA UG US UY UZ VA VC VE VG VI VN VU WS XK YE ZA ZM ZW'.split(' ');
+
+/** Choose (or change) the name and flag shown on the leaderboard. */
+function nameSheet() {
+  if (account.state !== 'needsName' && account.state !== 'ready') return;
+  const editing = account.state === 'ready';
+  let name = editing ? account.profile.username : suggestName(account.user);
+  let country = editing ? account.profile.country || '' : guessCountry() || '';
+  let status = 'checking', busy = false, error = '', timer = null, seq = 0;
+  const options = COUNTRIES.map((c) => [c, countryName(c)]).sort((a, b) => a[1].localeCompare(b[1]));
+  const sheet = openSheet(`<div class="auth">
+    <div class="center" style="margin-top:6px" data-av></div>
+    <h3>${editing ? 'Your leaderboard name' : 'Pick your name'}</h3>
+    <div class="sub">${editing ? 'Change how you appear to other jumpers.' : 'This is how other jumpers will see you on the leaderboard.'}</div>
+    <div class="namefield"><span class="at">@</span><input class="field" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(name)}"><span class="nstatus"></span></div>
+    <div class="nhint small"></div>
+    <div class="label">Country</div>
+    <label class="country"><span class="cflag"></span><select>${`<option value="">Don’t show a flag</option>` + options.map(([c, n]) => `<option value="${c}" ${c === country ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>${icon('chevR', 'chev')}</label>
+    <div class="auth-error" style="display:none"></div>
+    <button class="btn press" style="margin-top:22px" data-save>${editing ? 'Save' : 'Join the Leaderboard'}</button></div>`);
+  const input = sheet.querySelector('input'), sel = sheet.querySelector('select');
+  const paint = () => {
+    sheet.querySelector('[data-av]').innerHTML = avatar(name || '?', 72);
+    sheet.querySelector('.cflag').textContent = country ? flag(country) : '🏳️';
+    const st = sheet.querySelector('.nstatus'), hint = sheet.querySelector('.nhint');
+    st.innerHTML = status === 'ok' ? icon('check') : status === 'taken' || status === 'invalid' ? icon('xmark') : '';
+    st.className = `nstatus ${status}`;
+    hint.textContent = { ok: 'Available', taken: 'Taken. Try another.', invalid: '3–20 letters, numbers, dots or underscores.', checking: 'Checking…' }[status] || '';
+    hint.className = `nhint small ${status}`;
+    const save = sheet.querySelector('[data-save]');
+    save.disabled = busy || status !== 'ok';
+    save.textContent = busy ? 'Saving…' : editing ? 'Save' : 'Join the Leaderboard';
+    const err = sheet.querySelector('.auth-error');
+    err.style.display = error ? '' : 'none'; err.textContent = error;
+  };
+  const check = () => {
+    clearTimeout(timer);
+    if (!validName(name)) { status = 'invalid'; return paint(); }
+    if (editing && name.toLowerCase() === account.profile.username.toLowerCase()) { status = 'ok'; return paint(); }
+    status = 'checking'; paint();
+    const mine = ++seq;
+    timer = setTimeout(async () => {
+      try {
+        let free = await account.nameAvailable(name);
+        // A suggested name that's taken gets a number on the end, before the jumper even notices.
+        if (!free && !editing && mine === 1) {
+          for (let i = 0; i < 4 && !free; i++) {
+            const alt = `${name.slice(0, 16)}${Math.floor(10 + Math.random() * 990)}`;
+            if (await account.nameAvailable(alt)) { name = alt; input.value = alt; free = true; }
+          }
+        }
+        if (mine === seq) { status = free ? 'ok' : 'taken'; paint(); }
+      } catch { if (mine === seq) { status = 'ok'; paint(); } } // offline: let the save decide
+    }, mine === 1 ? 0 : 350);
+  };
+  input.addEventListener('input', () => { name = input.value.trim(); error = ''; check(); });
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sheet.querySelector('[data-save]').click(); });
+  sel.addEventListener('change', () => { country = sel.value; paint(); });
+  sheet.querySelector('[data-save]').addEventListener('click', async () => {
+    if (status !== 'ok' || busy) return;
+    busy = true; error = ''; paint();
+    try {
+      await account.saveProfile({ username: name, country });
+      closeSheet();
+      lb.cache = {};
+      if (editing) toast('Saved');
+      else {
+        const n = await syncNow();
+        toast(n ? `You’re on the board! ${n} workout${n === 1 ? '' : 's'} added.` : 'You’re on the board!');
+        ui.tab = 'leaders'; ui.view = null; loadBoard(true);
+      }
+    } catch (e) {
+      error = friendlyError(e); busy = false;
+      if (/taken|reserved/.test(error)) status = 'taken';
+      paint();
+    }
+  });
+  check();
+  paint();
+}
+
+function deleteAccountSheet() {
+  openSheet(`<h3>Delete your account?</h3>
+    <div class="sub">This removes your name, country and every workout summary from the leaderboard, for good. Workouts saved on this device stay here.</div>
+    <button class="btn red press" data-sheet="yes">Delete Account</button>
+    <button class="btn gray press" style="margin-top:10px" data-sheet="no">Cancel</button>`, (sh) => {
+    sh.querySelector('[data-sheet="no"]').onclick = () => closeSheet();
+    sh.querySelector('[data-sheet="yes"]').onclick = async (e) => {
+      e.target.textContent = 'Deleting…'; e.target.disabled = true;
+      try { await account.deleteAccount(); closeSheet(); lb.cache = {}; toast('Your account was deleted'); }
+      catch (err) { toast(friendlyError(err) || 'Couldn’t delete the account. Try again.'); closeSheet(); }
+    };
+  });
 }
 
 // ================================================================= onboarding
@@ -845,7 +1230,16 @@ app.addEventListener('click', (e) => {
   if (!b) return;
   const a = b.dataset.act, arg = b.dataset.arg;
   switch (a) {
-    case 'tab': ui.tab = arg; ui.view = null; render(); app.querySelector('.screen')?.scrollTo(0, 0); break;
+    case 'tab': ui.tab = arg; ui.view = null; render(); app.querySelector('.screen')?.scrollTo(0, 0); if (arg === 'leaders') loadBoard(); break;
+    case 'signin': signInSheet(); break;
+    case 'editName': nameSheet(); break;
+    case 'signout': account.signOut().then(() => { lb.cache = {}; toast('Signed out'); }); break;
+    case 'deleteAccount': deleteAccountSheet(); break;
+    case 'lbPeriod': lb.period = arg; loadBoard(); break;
+    case 'lbMetric': lb.metric = arg; loadBoard(); break;
+    case 'lbScope': lb.scope = arg; loadBoard(); break;
+    case 'lbRefresh': loadBoard(true); break;
+    case 'lbRow': playerSheet(lb.rows?.find((r) => r.user_id === arg)); break;
     case 'connect': connectHandle(); break;
     case 'disconnect': handle.disconnect(); render(); break;
     case 'start': preStart(presets.free); break;
@@ -857,7 +1251,9 @@ app.addEventListener('click', (e) => {
     case 'done': ui.view = null; ui.tab = 'summary'; render(); break;
     case 'delete':
       if (confirm('Delete this workout? This can’t be undone.')) {
-        sessions = sessions.filter((s) => s.id !== ui.view.id); saveSessions(); ui.view = null; render();
+        const id = ui.view.id;
+        sessions = sessions.filter((s) => s.id !== id); saveSessions(); ui.view = null; render();
+        account.removeWorkout(id).then(() => { lb.cache = {}; }).catch(() => {});
       }
       break;
     case 'range': ui.histRange = arg; render(); break;
@@ -879,4 +1275,13 @@ window.addEventListener('resize', () => { if (app.querySelector('.chart')) bindC
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 
+// Coming back from Google or Apple sign-in on the web: land on the leaderboard, with a clean URL.
+const returningFromSignIn = new URLSearchParams(location.search).has('code') || sessionStorage.getItem('freerope.afterSignIn');
+if (returningFromSignIn && accountsEnabled) { ui.tab = 'leaders'; sessionStorage.removeItem('freerope.afterSignIn'); }
 render();
+account.init().then(() => {
+  if (location.search.includes('code=')) history.replaceState(null, '', location.pathname);
+  if (ui.tab === 'leaders') loadBoard();
+  if (returningFromSignIn && account.state === 'needsName') nameSheet();
+  else if (returningFromSignIn && account.state === 'ready') toast(`Welcome back, ${account.profile.username}`);
+});
