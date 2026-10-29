@@ -1,6 +1,5 @@
 # Builds the iOS app on a GitHub Mac and uploads it to TestFlight.
-# Run it from the Actions tab (or `gh workflow run ios.yml`). Needs these repository secrets:
-#   APPLE_TEAM_ID   the 10-character Team ID from developer.apple.com/account
+# Run it from the Actions tab (or `gh workflow run ios.yml`). Uploading needs these repository secrets (set them with ios/set-secrets.ps1):
 #   ASC_KEY_ID      App Store Connect API key ID (Users and Access > Integrations, Admin role)
 #   ASC_ISSUER_ID   the Issuer ID shown above the keys
 #   ASC_KEY_P8      the contents of the downloaded AuthKey_XXXX.p8
@@ -18,7 +17,7 @@ jobs:
     env:
       KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      TEAM_ID: 95FGU7T5Y8 # Apple team ID (not secret)
     steps:
       - uses: actions/checkout@v4
 
@@ -56,7 +55,7 @@ jobs:
           path: ios/shots
 
       - name: API key
-        if: env.TEAM_ID != ''
+        if: env.KEY_ID != ''
         env:
           KEY_P8: ${{ secrets.ASC_KEY_P8 }}
         run: |
@@ -65,7 +64,7 @@ jobs:
           echo "KEY_PATH=$RUNNER_TEMP/keys/AuthKey_$KEY_ID.p8" >> "$GITHUB_ENV"
 
       - name: Archive
-        if: env.TEAM_ID != ''
+        if: env.KEY_ID != ''
         working-directory: ios
         run: |
           xcodebuild archive \
@@ -76,7 +75,7 @@ jobs:
             DEVELOPMENT_TEAM="$TEAM_ID" CURRENT_PROJECT_VERSION="${{ github.run_number }}"
 
       - name: Upload to TestFlight
-        if: env.TEAM_ID != ''
+        if: env.KEY_ID != ''
         working-directory: ios
         run: |
           /usr/libexec/PlistBuddy -c "Add :teamID string $TEAM_ID" ExportOptions.plist
