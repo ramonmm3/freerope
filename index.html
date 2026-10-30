@@ -3,230 +3,352 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#000000">
-  <title>FreeRope · Jump Counter</title>
+  <meta name="theme-color" content="#a6ff00">
+  <title>FreeRope, the free jump counter</title>
   <meta name="description" content="A free jump counter for Crossrope AMP handles. Live count, research-based calories, pace charts and streaks. Android and iPhone.">
-  <meta property="og:title" content="FreeRope · free jump counter for Crossrope AMP handles">
+  <meta property="og:title" content="FreeRope, the free jump counter for Crossrope AMP handles">
   <meta property="og:description" content="Live jump count, research-based calories, pace charts and streaks. Android and iPhone.">
   <meta property="og:image" content="https://ramonmm3.github.io/freerope/shots/og.jpg">
   <meta property="og:url" content="https://ramonmm3.github.io/freerope/">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="app/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="app/icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" rel="stylesheet">
   <style>
+/* Hallmark · v2.0.0 · redesign: full · theme: custom · idea: "the page jumps rope: the headline hops a turning rope and the site counts every jump" · vibe: "loud lime, heavy tight type, gym-floor energy" · paper: brand lime #a6ff00 (the app's own accent, from app/icon.svg) · ink: green-black · faces: Inter, display and text cuts (by request: the app's own face, android ui/theme Type.kt) · hero: the headline jumping a live rope, a running count beside it · signature: the rope, in the hero and again as a tap-to-jump toy · posture: mid/grotesk-heavy/chromatic-lime · axes: mid/grotesk-heavy/chromatic-lime */
+/* critique: the old page was near-black with one neon accent, a centred head over six icon cards and a gradient word; this one turns the accent into the ground, sets the facts large and lets the product move */
+/* waive 1: Inter is the display face because the owner asked the site to match the app, which is set in Inter */
+/* waive 47c: the rope is not ornament; it is the product's one motion, and it counts */
+
     :root {
-      --bg: #000; --card: #111113; --card2: #1c1c1e; --line: rgba(84,84,88,.45);
-      --text: #f5f5f7; --muted: rgba(235,235,245,.62); --faint: rgba(235,235,245,.35);
-      --accent: #a6ff00; --accent2: #7be000; --teal: #64d2ff; --pink: #ff375f; --orange: #ff9f0a; --blue: #0a84ff;
-      color-scheme: dark;
+      --lime: #a6ff00;
+      --lime-deep: #8fe000;
+      --ink: #0e1209;
+      --ink-2: #1a2014;
+      --ink-3: #2b3423;
+      --paper: #f4f7ee;
+      --on-ink: #eef5e4;
+      --on-ink-soft: #b7c2aa;
+      --on-lime-soft: #2e3a1c;
+      --focus: #0057ff;
+      --font-display: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      --font-body: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      --max: 1200px;
+      --gutter: clamp(20px, 4vw, 48px);
+      --r-lg: 28px;
+      --r-md: 16px;
+      --ease: cubic-bezier(.2, .8, .2, 1);
+      --mask-solid: #000;
+      --col-gap: clamp(40px, 6vw, 96px);
+      color-scheme: light;
     }
-    * { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { overflow-x: clip; }
     html { scroll-behavior: smooth; }
-    body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; line-height: 1.45; overflow-x: hidden; }
-    a { color: var(--accent); text-decoration: none; }
-    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+    body { font-variation-settings: "opsz" 14; margin: 0; background: var(--lime); color: var(--ink); font: 400 17px/1.5 var(--font-body); -webkit-font-smoothing: antialiased; font-synthesis: none; }
+    img, video { display: block; max-width: 100%; height: auto; }
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; transition: none; }
+    .wrap { width: min(100% - 2 * var(--gutter), var(--max)); margin-inline: auto; }
+    h1, h2, h3 { text-wrap: balance; font-family: var(--font-display); font-variation-settings: "opsz" 32; font-weight: 800; line-height: .95; letter-spacing: -.045em; margin: 0; overflow-wrap: break-word; min-width: 0; }
+    p { margin: 0; }
 
-    header { position: sticky; top: 0; z-index: 10; backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); background: rgba(0,0,0,.72); border-bottom: .5px solid var(--line); }
-    header .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; color: var(--text); letter-spacing: -.3px; }
-    .brand img { width: 32px; height: 32px; border-radius: 8px; }
-    .nav-cta { background: var(--accent); color: #000; font-weight: 600; font-size: 14px; padding: 8px 16px; border-radius: 18px; }
+    /* Buttons: one primary style (ink on lime, lime on ink), one quiet style. */
+    .btn { display: inline-flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 28px; border-radius: 999px; font: 600 17px/1 var(--font-body); text-decoration: none; border: 2px solid var(--ink); cursor: pointer; transition: transform .18s var(--ease), background-color .18s var(--ease), color .18s var(--ease); }
+    .btn svg { width: 20px; height: 20px; flex: none; }
+    .btn.primary { background: var(--ink); color: var(--lime); }
+    .btn.primary:hover { transform: translateY(-2px); }
+    .btn.primary:active { transform: translateY(1px); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    .btn.quiet { background: transparent; color: var(--ink); }
+    .btn.quiet:hover { background: var(--ink); color: var(--lime); }
+    .on-ink .btn { border-color: var(--lime); }
+    .on-ink .btn.primary { background: var(--lime); color: var(--ink); }
+    .on-ink .btn.quiet { color: var(--on-ink); border-color: var(--ink-3); }
+    .on-ink .btn.quiet:hover { background: var(--on-ink); color: var(--ink); border-color: var(--on-ink); }
 
-    .hero { position: relative; padding: 72px 0 40px; overflow: hidden; }
-    .glow { position: absolute; inset: -20% -10% auto; height: 640px; background: radial-gradient(50% 50% at 50% 40%, rgba(166,255,0,.22), rgba(0,195,240,.08) 50%, transparent 70%); pointer-events: none; filter: blur(10px); }
-    .hero-grid { position: relative; display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; }
-    .eyebrow { display: inline-flex; gap: 8px; align-items: center; color: var(--accent); font-weight: 600; font-size: 14px; background: rgba(166,255,0,.1); border: 1px solid rgba(166,255,0,.25); padding: 6px 12px; border-radius: 20px; }
-    h1 { font-size: clamp(44px, 7vw, 84px); line-height: 1.02; letter-spacing: -2.5px; margin: 18px 0 16px; font-weight: 800; }
-    h1 .grad { background: linear-gradient(100deg, #c8ff4a, #a6ff00 40%, #64d2ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .lead { font-size: clamp(18px, 2.2vw, 21px); color: var(--muted); max-width: 520px; margin: 0 0 28px; }
-    .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 56px; padding: 0 26px; border-radius: 28px; font-weight: 600; font-size: 17px; transition: transform .2s, opacity .2s; border: 0; cursor: pointer; font-family: inherit; }
-    .btn:active { transform: scale(.97); opacity: .8; }
-    .btn.primary { background: var(--accent); color: #000; box-shadow: 0 10px 40px rgba(166,255,0,.25); }
-    .btn.ghost { background: rgba(255,255,255,.08); color: var(--text); }
-    .btn svg { width: 22px; height: 22px; }
-    .note { color: var(--faint); font-size: 13px; margin-top: 14px; }
+    /* Nav */
+    .nav { position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding-block: 24px; }
+    .word { display: inline-flex; align-items: center; gap: 12px; font: 800 20px/1 var(--font-display); text-decoration: none; letter-spacing: -.03em; font-variation-settings: "opsz" 32; }
+    .word img { width: 36px; height: 36px; border-radius: 9px; }
+    .nav-links { display: flex; align-items: center; gap: 28px; font-weight: 500; }
+    .nav-links a:not(.btn) { text-decoration: none; }
+    .nav-links a:not(.btn):hover { text-decoration: underline; text-underline-offset: 4px; }
+    .nav .btn { min-height: 44px; padding: 0 20px; font-size: 16px; }
 
-    .phones { position: relative; height: 670px; }
-    .phone { position: absolute; width: 270px; aspect-ratio: 968/2250; box-sizing: content-box; border-radius: 34px; background: linear-gradient(145deg,#2c2c30,#0a0a0b 40%,#1b1b1e); padding: 9px; box-shadow: 0 0 0 1.5px #3a3a3e, 0 40px 80px rgba(0,0,0,.7), 0 0 120px rgba(166,255,0,.12); }
-    .phone img { width: 100%; height: 100%; object-fit: fill; border-radius: 24px; display: block; background: #000; }
-    .phone.a { left: 50%; top: 0; transform: translateX(-30%) rotate(4deg); z-index: 2; }
-    .phone.b { left: 50%; top: 60px; transform: translateX(-95%) rotate(-6deg); opacity: .9; }
+    /* Hero: the headline jumps the rope. */
+    .hero { min-height: min(100svh, 980px); display: flex; flex-direction: column; }
+    .stage { position: relative; flex: 1; display: grid; place-items: center; padding-block: clamp(24px, 6vh, 64px) clamp(28px, 6vh, 56px); }
+    .rope-layer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+    .rope-layer.back { z-index: 0; }
+    .rope-layer.front { z-index: 2; }
+    .rope { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: round; }
+    .handle { fill: var(--ink); }
+    .jumper { position: relative; z-index: 1; text-align: center; will-change: transform; }
+    .hero h1 { font-size: clamp(56px, 11vw, 168px); }
+    .hero h1 span { display: block; }
+    .hero-foot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px 48px; align-items: end; padding-bottom: 36px; }
+    .lead { font-size: clamp(18px, 1.6vw, 21px); max-width: 34ch; font-weight: 500; }
+    .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+    .tally { text-align: right; }
+    .tally b { display: block; font: 800 clamp(40px, 5vw, 64px)/1 var(--font-display); font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
+    .tally span { color: var(--on-lime-soft); font-size: 15px; }
 
-    section { padding: 80px 0; }
-    .sec-title { font-size: clamp(32px, 5vw, 52px); letter-spacing: -1.5px; line-height: 1.05; margin: 0 0 14px; font-weight: 800; text-align: center; }
-    .sec-lead { color: var(--muted); text-align: center; max-width: 620px; margin: 0 auto 44px; font-size: 18px; }
+    /* Ink sections */
+    .on-ink { background: var(--ink); color: var(--on-ink); }
+    section { padding-block: clamp(80px, 12vw, 152px); }
+    .head { font-size: clamp(34px, 5.4vw, 72px); max-width: 15ch; }
+    .sub { margin-top: 20px; max-width: 46ch; font-size: 19px; color: var(--on-lime-soft); }
+    .on-ink .sub { color: var(--on-ink-soft); }
 
-    .video { max-width: 960px; margin: 0 auto; border-radius: 24px; overflow: hidden; background: #0a0a0a; box-shadow: 0 0 0 1px var(--line), 0 30px 80px rgba(0,0,0,.6); aspect-ratio: 16/9; }
-    .video video { width: 100%; height: 100%; display: block; }
+    /* The handle, not the cloud: video + live screen */
+    .direct { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap:  48px var(--col-gap); align-items: center; }
+    .film { border-radius: var(--r-lg); overflow: hidden; background: var(--ink-2); aspect-ratio: 16 / 9; }
+    .film video { width: 100%; height: 100%; object-fit: cover; }
+    .film-note { margin-top: 16px; color: var(--on-ink-soft); font-size: 15px; }
+    .direct .head { max-width: 12ch; font-size: clamp(32px, 3.8vw, 56px); }
+    /* Wide type in a side column: smaller, so no word ever splits. */
+    .get-grid .head, .session .head, .toy .head { font-size: clamp(30px, 3.7vw, 54px); }
 
-    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .f { background: var(--card); border: .5px solid var(--line); border-radius: 22px; padding: 26px; }
-    .f .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 16px; }
-    .f .ic svg { width: 24px; height: 24px; color: #fff; }
-    .f h3 { margin: 0 0 6px; font-size: 19px; letter-spacing: -.3px; }
-    .f p { margin: 0; color: var(--muted); font-size: 15px; }
+    /* Tap to jump */
+    .toy { background: var(--paper); }
+    .toy-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap:  48px var(--col-gap); align-items: center; }
+    .pad { position: relative; aspect-ratio: 4 / 3; border-radius: var(--r-lg); background: var(--lime); display: grid; place-items: center; overflow: hidden; touch-action: manipulation; cursor: pointer; user-select: none; -webkit-user-select: none; }
+    .pad .jumper b { display: block; min-width: 2.2em; font: 800 clamp(72px, 10vw, 150px)/1 var(--font-display); font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
+    .pad .jumper span { font-weight: 600; }
+    .pad-read { display: flex; gap: 36px; margin-top: 28px; }
+    .pad-read b { display: block; font: 800 34px/1 var(--font-display); font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
+    .pad-read span { font-size: 15px; color: var(--on-lime-soft); }
+    .pad-hint { margin-top: 20px; min-height: 1.5em; font-weight: 500; }
 
-    .get { background: var(--card); border: .5px solid var(--line); border-radius: 28px; padding: 32px; max-width: 760px; margin: 0 auto; }
-    .tabs { display: flex; background: rgba(118,118,128,.24); border-radius: 12px; padding: 3px; margin-bottom: 28px; }
-    .tabs button { flex: 1; height: 40px; border: 0; background: none; color: var(--text); font: 600 15px/1 inherit; font-family: inherit; border-radius: 10px; cursor: pointer; }
-    .tabs button.on { background: #636366; }
+    /* What a session gives you */
+    .session { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap:  48px var(--col-gap); align-items: start; }
+    .session-aside { position: sticky; top: 32px; }
+    /* The real screen, cut from the App Store shot: rounded like the phone, fading out at the bottom. */
+    .shot { width: min(100%, 320px); margin-top: 40px; border-radius: 44px 44px 0 0; border: 1px solid var(--ink-3); border-bottom: 0;
+      -webkit-mask-image: linear-gradient(to bottom, var(--mask-solid) 78%, transparent); mask-image: linear-gradient(to bottom, var(--mask-solid) 78%, transparent); }
+    .gives { list-style: none; margin: 0; padding: 0; }
+    .gives li { padding-block: 32px; border-top: 1px solid var(--ink-3); display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .gives li:last-child { border-bottom: 1px solid var(--ink-3); }
+    .gives h3 { font-size: clamp(24px, 2.6vw, 34px); color: var(--lime); }
+    .gives p { color: var(--on-ink-soft); max-width: 52ch; }
+
+    /* Get FreeRope */
+    .get-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap:  48px var(--col-gap); align-items: start; }
+    .tabs { display: inline-flex; gap: 8px; padding: 8px; border-radius: 999px; background: var(--ink); margin-bottom: 36px; }
+    .tabs button { font: 600 16px/1 var(--font-body); color: var(--on-ink-soft); background: transparent; border: 0; border-radius: 999px; padding: 12px 20px; cursor: pointer; transition: background-color .18s var(--ease), color .18s var(--ease); }
+    .tabs button:hover { color: var(--on-ink); }
+    .tabs button.on { background: var(--lime); color: var(--ink); }
     .panel { display: none; }
-    .panel.on { display: block; animation: fade .3s ease-out; }
-    @keyframes fade { from { opacity: 0; transform: translateY(6px); } }
-    .steps { list-style: none; padding: 0; margin: 24px 0 0; counter-reset: s; }
-    .steps > li { position: relative; padding: 0 0 22px 52px; counter-increment: s; }
-    .steps > li::before { content: counter(s); position: absolute; left: 0; top: -2px; width: 34px; height: 34px; border-radius: 50%; background: rgba(166,255,0,.14); color: var(--accent); display: grid; place-items: center; font-weight: 700; }
-    .steps > li:not(:last-child)::after { content: ""; position: absolute; left: 16.5px; top: 38px; bottom: 4px; width: 1px; background: var(--line); }
-    .steps > li > b { display: block; font-size: 17px; margin-bottom: 2px; }
-    .steps > li > span { color: var(--muted); font-size: 15px; }
-    .big-btn { width: 100%; }
-    .copy { display: flex; gap: 8px; margin-top: 10px; }
-    .copy code { flex: 1; background: #000; border: .5px solid var(--line); border-radius: 12px; padding: 12px 14px; font: 15px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .copy button { border: 0; background: rgba(166,255,0,.14); color: var(--accent); font: 600 15px inherit; font-family: inherit; padding: 0 18px; border-radius: 12px; cursor: pointer; }
-    .qr { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
-    .qr #qr { background: #fff; padding: 12px; border-radius: 16px; width: 184px; height: 184px; }
-    .qr #qr img, .qr #qr svg { width: 160px; height: 160px; display: block; }
-    h3.route { font-size: 18px; margin: 26px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-    h3.route .badge { font-size: 12px; font-weight: 600; color: #000; background: var(--accent); padding: 3px 10px; border-radius: 10px; }
-    h3.route .badge.gray { background: rgba(255,255,255,.12); color: var(--muted); }
-    .steps .why { display: block; margin-top: 8px; font-size: 13px; color: var(--faint); }
-    .kbd { display: inline-block; font-size: 12px; padding: 0 6px; border-radius: 6px; background: rgba(255,255,255,.1); color: var(--text); }
-    p.done { margin: 0 0 4px 52px; color: var(--muted); font-size: 15px; }
-    ol.sub { margin: 12px 0 4px; padding-left: 20px; color: var(--muted); font-size: 15px; }
-    ol.sub li { margin: 6px 0; padding: 0; }
-    ol.sub b { color: var(--text); }
-    details.alt { margin-top: 8px; background: rgba(255,255,255,.04); border: .5px solid var(--line); border-radius: 14px; padding: 14px 16px; }
-    details.alt summary { font-size: 15px; }
-    details.alt p { font-size: 14px; }
-    .tip { background: rgba(255,159,10,.1); border: .5px solid rgba(255,159,10,.3); color: #ffcf80; border-radius: 14px; padding: 12px 14px; font-size: 14px; margin-top: 4px; }
+    .panel.on { display: block; }
+    .meta { margin-top: 12px; font-size: 15px; color: var(--on-lime-soft); }
+    .steps { list-style: none; counter-reset: s; margin: 32px 0 0; padding: 0; }
+    .steps li { counter-increment: s; position: relative; padding: 0 0 24px 56px; }
+    .steps li::before { content: counter(s); position: absolute; left: 0; top: -2px; width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: var(--lime); display: grid; place-items: center; font: 800 16px/1 var(--font-display); }
+    .steps b { display: block; font-size: 18px; margin-bottom: 2px; }
+    .steps span { display: block; color: var(--on-lime-soft); }
+    .done { margin-top: 8px; color: var(--on-lime-soft); }
+    details.alt { margin-top: 28px; border-top: 2px solid var(--ink); padding-top: 20px; }
+    details.alt > summary { cursor: pointer; font-weight: 600; }
+    details.alt details.alt { border-top-width: 1px; }
+    .route { font: 800 22px/1.1 var(--font-display); margin: 28px 0 4px; }
+    .badge { display: inline-block; margin-top: 4px; font: 600 13px/1 var(--font-body); padding: 8px 12px; border-radius: 999px; background: var(--ink); color: var(--lime); }
+    .why { display: block; margin-top: 8px; font-style: italic; }
+    .ic-inline { width: 1.05em; height: 1.05em; vertical-align: -.15em; }
+    .copy { display: flex; align-items: center; gap: 12px; margin-top: 12px; background: var(--paper); border-radius: 12px; padding: 8px 8px 8px 16px; }
+    .copy code { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
+    .copy button { font: 600 14px/1 var(--font-body); background: var(--ink); color: var(--lime); border: 0; border-radius: 999px; padding: 12px 16px; cursor: pointer; }
+    .qr { display: flex; flex-wrap: wrap; gap: 28px; align-items: center; }
+    #qr { width: 168px; height: 168px; background: var(--paper); padding: 16px; border-radius: var(--r-md); }
+    #qr svg { width: 100%; height: 100%; }
+    #qr svg path, #qr svg rect[fill="#000000"] { fill: var(--ink); }
 
-    .support { text-align: center; background: radial-gradient(80% 120% at 50% 0%, rgba(166,255,0,.12), transparent 70%), var(--card); border: .5px solid var(--line); border-radius: 28px; padding: 44px 24px; max-width: 760px; margin: 0 auto; }
-    .heart { width: 64px; height: 64px; border-radius: 20px; margin: 0 auto; display: grid; place-items: center; background: linear-gradient(135deg, #ff5a8c, #fa114f); box-shadow: 0 12px 40px rgba(250,17,79,.35); }
-    .heart svg { width: 32px; height: 32px; color: #fff; }
-    .faq { max-width: 760px; margin: 0 auto; }
-    details { border-bottom: .5px solid var(--line); padding: 18px 4px; }
-    summary { cursor: pointer; font-weight: 600; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
-    summary::-webkit-details-marker { display: none; }
-    summary::after { content: "+"; color: var(--accent); font-size: 22px; line-height: 1; transition: transform .2s; }
-    details[open] summary::after { transform: rotate(45deg); }
-    details p { color: var(--muted); margin: 10px 0 0; }
+    /* Support: the cost, set as the headline */
+    .support { text-align: left; }
+    .cost { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px var(--col-gap); margin-top: 48px; }
+    .cost div { border-top: 2px solid var(--lime); padding-top: 20px; }
+    .cost b { display: block; font: 800 clamp(64px, 11vw, 160px)/1 var(--font-display); font-variation-settings: "opsz" 32; letter-spacing: -.05em; color: var(--lime); }
+    .cost span { color: var(--on-ink-soft); font-size: 18px; }
+    .support-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px; margin-top: 48px; }
+    .support-foot p { max-width: 52ch; color: var(--on-ink-soft); }
 
-    footer { border-top: .5px solid var(--line); padding: 36px 0 48px; color: var(--faint); font-size: 13px; text-align: center; }
-    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
-    .reveal.in { opacity: 1; transform: none; }
+    /* Questions */
+    .faq-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; }
+    .faq { max-width: 860px; }
+    .faq details { border-top: 2px solid var(--ink); }
+    .faq details:last-child { border-bottom: 2px solid var(--ink); }
+    .faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 20px; padding: 24px 0; font-weight: 600; font-size: 19px; }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::after { content: "+"; font: 800 24px/1 var(--font-display); transition: transform .2s var(--ease); }
+    .faq details[open] summary::after { transform: rotate(45deg); }
+    .faq details p { padding: 0 0 24px; max-width: 60ch; color: var(--on-lime-soft); }
+    .faq a { font-weight: 600; }
 
-    @media (max-width: 1100px) {
-      .phone.b { display: none; }
-      .phone.a { transform: translateX(-50%) rotate(3deg); }
+    footer { padding-block: 64px 48px; }
+    .foot { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px var(--col-gap); align-items: end; }
+    .foot .big { grid-column: 1 / -1; font: 800 clamp(64px, 17vw, 240px)/.85 var(--font-display); font-variation-settings: "opsz" 32; letter-spacing: -.06em; color: var(--lime); }
+    .foot p { color: var(--on-ink-soft); font-size: 15px; max-width: 48ch; }
+    .foot a { color: var(--lime); }
+
+    /* One reveal: sections rise in once. Visible by default; JS opts in. */
+    .js .rise { opacity: 0; transform: translateY(28px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+    .js .rise.in { opacity: 1; transform: none; }
+
+    @media (max-width: 900px) {
+      .nav-links a:not(.btn) { display: none; }
+      .hero-foot { grid-template-columns: minmax(0, 1fr); }
+      .tally { text-align: left; }
+      .direct, .toy-grid, .session, .get-grid, .faq-grid { grid-template-columns: minmax(0, 1fr); }
+      .session-aside { position: static; }
+      .shot { width: min(100%, 300px); }
+      .foot { grid-template-columns: minmax(0, 1fr); }
+      .hero h1 { font-size: clamp(52px, 17vw, 120px); }
     }
-    @media (max-width: 860px) {
-      .hero { padding-top: 40px; }
-      .hero-grid { grid-template-columns: 1fr; text-align: center; }
-      .lead { margin-left: auto; margin-right: auto; }
-      .ctas { justify-content: center; }
-      .phones { height: 530px; margin-top: 10px; }
-      .phone { width: 210px; border-radius: 28px; padding: 7px; }
-      .phone img { border-radius: 20px; }
-      .features { grid-template-columns: 1fr; }
-      .get { padding: 22px 18px; }
-      section { padding: 56px 0; }
+    @media (max-width: 520px) {
+      body { font-size: 16px; }
+      .tabs { display: flex; }
+      .tabs button { flex: 1; padding: 12px 8px; }
+      .cost { grid-template-columns: minmax(0, 1fr); }
+      .rope { stroke-width: 5; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .js .rise { opacity: 1; transform: none; transition: none; }
+      .btn, .tabs button, .faq summary::after { transition: none; }
     }
   </style>
 </head>
 <body>
-  <header><div class="wrap">
-    <a class="brand" href="#"><img src="app/icon-180.png" alt="">FreeRope</a>
-    <a class="nav-cta" href="#get">Get FreeRope</a>
-  </div></header>
+  <script>document.documentElement.classList.add('js')</script>
 
-  <div class="hero"><div class="glow"></div><div class="wrap hero-grid">
-    <div>
-      <span class="eyebrow">● Free · for Crossrope AMP handles</span>
-      <h1>Every jump.<br><span class="grad">Counted.</span></h1>
-      <p class="lead">FreeRope connects to your Crossrope AMP handle and turns every session into live counts, pace charts, streaks and calories that account for your rope's weight.</p>
-      <div class="ctas">
-        <a class="btn primary" id="heroCta" href="#get"></a>
-        <a class="btn ghost" href="app/">Try the demo</a>
+  <header class="hero">
+    <nav class="nav wrap" aria-label="Main">
+      <a class="word" href="#"><img src="app/icon-180.png" alt="">FreeRope</a>
+      <div class="nav-links">
+        <a href="#how">How it works</a>
+        <a href="#questions">Questions</a>
+        <a class="btn primary" href="#get">Get FreeRope</a>
       </div>
-      <div class="note" id="heroNote">No account. No ads. Your workouts stay on your phone.</div>
-    </div>
-    <div class="phones">
-      <div class="phone b"><img src="shots/summary.jpg" alt="FreeRope summary screen"></div>
-      <div class="phone a"><img src="shots/live.jpg" alt="FreeRope live workout screen"></div>
-    </div>
-  </div></div>
+    </nav>
 
-  <section id="video" class="reveal" hidden><div class="wrap">
-    <h2 class="sec-title">See it in action</h2>
-    <p class="sec-lead">Thirty seconds of FreeRope.</p>
-    <div class="video"><video id="promo" src="freerope-promo.mp4" poster="shots/poster.jpg" controls playsinline preload="metadata"></video></div>
+    <div class="stage wrap" id="heroStage">
+      <svg class="rope-layer back" aria-hidden="true"><path class="rope"/></svg>
+      <div class="jumper" id="heroJumper">
+        <h1><span>Every jump.</span><span>Counted.</span></h1>
+      </div>
+      <svg class="rope-layer front" aria-hidden="true"><path class="rope"/><rect class="handle"/><rect class="handle"/></svg>
+    </div>
+
+    <div class="hero-foot wrap">
+      <div>
+        <p class="lead">Free live counting for your Crossrope AMP handle. No membership, no account.</p>
+        <div class="ctas">
+          <a class="btn primary" id="heroCta" href="#get">Get FreeRope</a>
+          <a class="btn quiet" href="app/">Open the web app</a>
+        </div>
+      </div>
+      <p class="tally" aria-live="off"><b id="heroCount">0</b><span>jumps since you got here</span></p>
+    </div>
+  </header>
+
+  <section class="on-ink" id="how"><div class="wrap direct rise">
+    <div>
+      <h2 class="head">It talks to the handle, not a server.</h2>
+      <p class="sub">Bluetooth, straight from your AMP handle to your phone. Big numbers mid-set, a voice cue every lap, and your workouts never leave the device.</p>
+    </div>
+    <div id="video" hidden>
+      <div class="film"><video id="promo" src="freerope-promo.mp4?v=2" poster="shots/poster.jpg?v=2" controls playsinline muted loop preload="metadata"></video></div>
+      <p class="film-note">FreeRope in under a minute, recorded on a real handle.</p>
+    </div>
   </div></section>
 
-  <section class="reveal"><div class="wrap">
-    <h2 class="sec-title">Built for jumpers</h2>
-    <p class="sec-lead">Everything you want to know after a session, without the subscription.</p>
-    <div class="features">
-      <div class="f"><div class="ic" style="background:var(--blue)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 4.5V2.5L17 7 7 17"/></svg></div><h3>Live jump count</h3><p>Talks straight to your handle over Bluetooth. Big, glanceable numbers mid-set, with voice cues every lap.</p></div>
-      <div class="f"><div class="ic" style="background:var(--orange)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4 0 7-2.8 7-7 0-4.5-4-7-4-11-2.5 1.5-4 4-4 6-1-1-2-2-2-3.5C6.5 8.5 5 11 5 15c0 4.2 3 7 7 7z"/></svg></div><h3>Honest calories</h3><p>Built from jump rope research, your body, your pace and your rope weight. A 1 lb rope really does count for more.</p></div>
-      <div class="f"><div class="ic" style="background:#30d158"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 5-8 4 5"/></svg></div><h3>Pace you can read</h3><p>Smoothed pace chart with rests shaded out. Drag across it to see your speed at any moment.</p></div>
-      <div class="f"><div class="ic" style="background:var(--pink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/></svg></div><h3>Rings & streaks</h3><p>Daily goals for jumps, minutes and calories. Best streak, misses and personal bests on every workout.</p></div>
-      <div class="f"><div class="ic" style="background:#bf5af2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l3 3-3 3M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3M20 13v2a4 4 0 0 1-4 4H4"/></svg></div><h3>Timed, target & intervals</h3><p>Free jump, 1–20 minute timers, jump targets up to 5,000, Tabata and sprint intervals with spoken countdowns.</p></div>
-      <div class="f"><div class="ic" style="background:var(--teal)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div><h3>In perspective</h3><p>How long you'd need to run, cycle or swim for the same burn, and how much pizza you just earned back.</p></div>
+  <section class="toy"><div class="wrap toy-grid rise">
+    <div>
+      <h2 class="head">Tap to feel the count.</h2>
+      <p class="sub">Press the pad or your space bar. With a real handle, FreeRope does the tapping.</p>
+      <div class="pad-read">
+        <div><b id="toyPace">0</b><span>per minute</span></div>
+        <div><b id="toyBest">0</b><span>best streak</span></div>
+      </div>
+      <p class="pad-hint" id="toyHint" aria-live="polite"></p>
+    </div>
+    <div class="pad" id="pad" role="button" tabindex="0" aria-label="Jump: tap or press space">
+      <svg class="rope-layer back" aria-hidden="true"><path class="rope"/></svg>
+      <div class="jumper" id="padJumper"><b id="toyCount">0</b><span>jumps</span></div>
+      <svg class="rope-layer front" aria-hidden="true"><path class="rope"/><rect class="handle"/><rect class="handle"/></svg>
     </div>
   </div></section>
 
-  <section id="get" class="reveal"><div class="wrap">
-    <h2 class="sec-title">Get FreeRope</h2>
-    <p class="sec-lead">Free, and it takes about a minute.</p>
-    <div class="get">
+  <section class="on-ink"><div class="wrap session">
+    <div class="session-aside rise">
+      <h2 class="head">After every set, the whole story.</h2>
+      <img class="shot" src="shots/session.jpg" alt="A FreeRope workout: pace chart with rests shaded, and the same energy as running, cycling or swimming" loading="lazy" width="720" height="1577">
+    </div>
+    <ul class="gives rise">
+      <li><h3>Live jump count</h3><p>Talks straight to your handle over Bluetooth. Big, glanceable numbers mid-set, with voice cues every lap.</p></li>
+      <li><h3>Honest calories</h3><p>Built from jump rope research, your body, your pace and your rope weight. A 1 lb rope really does count for more.</p></li>
+      <li><h3>Pace you can read</h3><p>Smoothed pace chart with rests shaded out. Drag across it to see your speed at any moment.</p></li>
+      <li><h3>Rings and streaks</h3><p>Daily goals for jumps, minutes and calories. Best streak, misses and personal bests on every workout.</p></li>
+      <li><h3>Timed, target and intervals</h3><p>Free jump, 1 to 20 minute timers, jump targets up to 5,000, Tabata and sprint intervals with spoken countdowns.</p></li>
+      <li><h3>In perspective</h3><p>How long you’d need to run, cycle or swim for the same burn, and how much pizza you just earned back.</p></li>
+    </ul>
+  </div></section>
+
+  <section id="get"><div class="wrap get-grid">
+    <div class="rise">
+      <h2 class="head">Get FreeRope. It takes a minute.</h2>
+      <p class="sub">Android, iPhone or any computer with Chrome. Free on all three.</p>
+    </div>
+    <div class="rise">
       <div class="tabs" role="tablist">
         <button data-tab="android">Android</button><button data-tab="iphone">iPhone</button><button data-tab="computer">Computer</button>
       </div>
 
       <div class="panel" id="p-android">
-        <a class="btn primary big-btn" href="FreeRope.apk" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download FreeRope for Android</a>
-        <div class="note" style="text-align:center"><span id="apkMeta">FreeRope.apk</span> · Android 12 or newer</div>
+        <a class="btn primary" href="FreeRope.apk" download><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Android</a>
+        <p class="meta"><span id="apkMeta">FreeRope.apk</span>, for Android 12 or newer. Coming soon to Google Play.</p>
         <ol class="steps">
-          <li><b>Download</b><span>Tap the button above. Your phone may say the file "might be harmful". That's the standard warning for any app that isn't from the Play Store. Tap <i>Download anyway</i>.</span></li>
+          <li><b>Download</b><span>Tap the button above. Your phone may say the file “might be harmful”. That’s the standard warning for any app that isn’t from the Play Store. Tap <i>Download anyway</i>.</span></li>
           <li><b>Open it</b><span>Tap the download when it finishes. If Android asks to allow installs from your browser, tap <i>Settings</i>, switch on <i>Allow from this source</i>, then go back.</span></li>
-          <li><b>Install</b><span>Tap <i>Install</i>. If Play Protect warns that it doesn't recognise the app, tap <i>More details → Install anyway</i>.</span></li>
+          <li><b>Install</b><span>Tap <i>Install</i>. If Play Protect warns that it doesn’t recognise the app, tap <i>More details</i>, then <i>Install anyway</i>.</span></li>
           <li><b>Jump</b><span>Open FreeRope, shake your handle to wake it, and tap <i>Connect</i>. FreeRope tells you when an update is out.</span></li>
         </ol>
       </div>
 
       <div class="panel" id="p-iphone">
-        <a class="btn primary big-btn" href="https://testflight.apple.com/join/ZqNrdYr5" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>Get FreeRope on TestFlight</a>
-        <div class="note" style="text-align:center">A real iPhone app · iOS 16 or newer · free</div>
+        <a class="btn primary" href="https://testflight.apple.com/join/ZqNrdYr5" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>Get it on TestFlight</a>
+        <p class="meta">A real iPhone app, free, for iOS 16 or newer</p>
         <ol class="steps">
-          <li><b>Tap the button above</b><span>It opens Apple's TestFlight page for FreeRope. If you don't have TestFlight yet, it sends you to the App Store to get it (free, made by Apple).</span></li>
+          <li><b>Tap the button above</b><span>It opens Apple’s TestFlight page for FreeRope. If you don’t have TestFlight yet, it sends you to the App Store to get it (free, made by Apple).</span></li>
           <li><b>Accept and install</b><span>Back on the FreeRope page, tap <i>Accept</i>, then <i>Install</i>. FreeRope appears on your home screen like any other app.</span></li>
           <li><b>Jump</b><span>Open FreeRope, allow Bluetooth, shake your handle to wake it and tap <i>Connect</i>. TestFlight installs updates for you.</span></li>
         </ol>
-        <p class="done">TestFlight is Apple's own way to share apps before they're in the App Store, so there's nothing to sideload and no warnings.</p>
+        <p class="done">TestFlight is Apple’s own way to share apps before they’re in the App Store, so there’s nothing to sideload and no warnings.</p>
         <details class="alt"><summary>TestFlight link full, or rather not install an app? Use the web version</summary>
-        <h3 class="route">Safari + beacio <span class="badge">Recommended · iOS 26.2 or newer</span></h3>
+        <h3 class="route">Safari and beacio</h3><p class="badge">Recommended, iOS 26.2 or newer</p>
         <ol class="steps">
           <li><b>Get beacio (free)</b><span>It adds Bluetooth to Safari. Open it once and follow its single setup screen: it switches the extension on and asks you to allow it on websites (tap <i>Always Allow</i>).</span>
-            <div style="margin-top:12px"><a class="btn primary" href="https://apps.apple.com/app/id6761301368" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>Get beacio</a></div></li>
+            <div style="margin-top:12px"><a class="btn primary" href="https://apps.apple.com/app/id6761301368" target="_blank" rel="noopener">Get beacio</a></div></li>
           <li><b>Open FreeRope in Safari</b><span>Tap the button below in Safari.</span>
-            <div style="margin-top:12px"><a class="btn ghost" href="app/" target="_blank" rel="noopener">Open FreeRope</a></div></li>
-          <li><b>Add it to your home screen</b><span>Tap <b>Share</b> <span class="kbd">⬆︎</span>, then <b>Add to Home Screen</b>. Switch <b>off</b> “Open as Web App”, then tap <b>Add</b>.</span>
-            <span class="why">That switch matters: with it off, the FreeRope icon opens in Safari, where beacio's Bluetooth works.</span></li>
+            <div style="margin-top:12px"><a class="btn quiet" href="app/" target="_blank" rel="noopener">Open FreeRope</a></div></li>
+          <li><b>Add it to your home screen</b><span>Tap <b>Share</b> <svg class="ic-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>, then <b>Add to Home Screen</b>. Switch <b>off</b> “Open as Web App”, then tap <b>Add</b>.</span>
+            <span class="why">That switch matters: with it off, the FreeRope icon opens in Safari, where beacio’s Bluetooth works.</span></li>
         </ol>
-        <p class="done">That's it: a FreeRope icon on your home screen. Shake your handle to wake it and tap <i>Connect Handle</i>.</p>
+        <p class="done">That’s it: a FreeRope icon on your home screen. Shake your handle to wake it and tap <i>Connect Handle</i>.</p>
 
-        <h3 class="route">Bluefy <span class="badge gray">Any iOS version</span></h3>
+        <h3 class="route">Bluefy</h3><p class="badge">Any iOS version</p>
         <ol class="steps">
           <li><b>Get Bluefy (free)</b><span>A browser with Bluetooth built in.</span>
-            <div style="margin-top:12px"><a class="btn ghost" href="https://apps.apple.com/app/id1492822055" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>Get Bluefy</a></div></li>
+            <div style="margin-top:12px"><a class="btn quiet" href="https://apps.apple.com/app/id1492822055" target="_blank" rel="noopener">Get Bluefy</a></div></li>
           <li><b>Open FreeRope in Bluefy</b><span>Once Bluefy is installed, tap this button. Next time, just open Bluefy: FreeRope stays open in its tab.</span>
-            <div style="margin-top:12px"><a class="btn ghost" id="openBluefy" href="#">Open in Bluefy</a></div>
-            <span style="display:block;margin-top:10px;font-size:13px">Button not working? Open Bluefy and paste:</span>
+            <div style="margin-top:12px"><a class="btn quiet" id="openBluefy" href="#">Open in Bluefy</a></div>
+            <span style="display:block;margin-top:10px;font-size:15px">Button not working? Open Bluefy and paste:</span>
             <div class="copy"><code id="appUrl"></code><button data-copy="app">Copy</button></div></li>
         </ol>
         <details class="alt"><summary>Want a FreeRope icon for Bluefy too? (optional)</summary>
-          <p>Save <a href="app/icon-512.png" target="_blank" rel="noopener">this icon</a> to Photos. In the Shortcuts app tap <b>+</b> → <b>Open URLs</b>, paste the link below, rename it <b>FreeRope</b>, then use <b>Add to Home Screen</b> and pick the icon.</p>
+          <p style="margin-top:12px">Save <a href="app/icon-512.png" target="_blank" rel="noopener">this icon</a> to Photos. In the Shortcuts app tap <b>+</b>, then <b>Open URLs</b>, paste the link below, rename it <b>FreeRope</b>, then use <b>Add to Home Screen</b> and pick the icon.</p>
           <div class="copy"><code id="bfUrl"></code><button data-copy="bluefy">Copy</button></div>
         </details>
         </details>
@@ -236,41 +358,49 @@
         <div class="qr">
           <div id="qr"></div>
           <div style="flex:1;min-width:220px">
-            <b style="font-size:19px">Scan with your phone</b>
-            <p style="color:var(--muted);margin:6px 0 16px">Point your phone's camera at the code to open this page there, then follow the Android or iPhone steps.</p>
-            <a class="btn ghost" href="app/">Open the web app here</a>
-            <p class="note">The web app runs in Chrome or Edge on Windows, Mac and Android.</p>
+            <h3 class="route" style="margin-top:0">Scan with your phone</h3>
+            <p class="done" style="margin:8px 0 18px">Point your phone’s camera at the code to open this page there, then follow the Android or iPhone steps.</p>
+            <a class="btn quiet" href="app/">Open the web app here</a>
+            <p class="meta">The web app runs in Chrome or Edge on Windows, Mac and Android.</p>
           </div>
         </div>
       </div>
     </div>
   </div></section>
 
-  <section id="support" class="reveal"><div class="wrap">
-    <div class="support">
-      <div class="heart"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.2 0 3.6 1.2 5.2 3 1.6-1.8 3-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg></div>
-      <h2 class="sec-title" style="margin-top:18px">Help FreeRope reach the App Store</h2>
-      <p class="sec-lead" style="margin-bottom:28px">FreeRope is free and stays free. Publishing it properly costs <b style="color:var(--text)">$99 a year</b> for Apple's App Store and <b style="color:var(--text)">$25</b> once for Google Play. If FreeRope earns a spot in your routine, a small tip gets it into the stores (no more TestFlight, no more install warnings) and keeps updates coming.</p>
-      <a class="btn primary" href="https://www.paypal.com/donate/?business=ramonmm3%40gmail.com&amp;item_name=Help+FreeRope+reach+the+App+Store+and+Play+Store&amp;currency_code=USD" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.4 21.5H3.7a.6.6 0 0 1-.6-.7L5.8 3.3c.1-.5.5-.8 1-.8h6.6c3.4 0 5.6 1.8 5 5.2-.6 3.8-3.1 5.4-6.5 5.4H9.6c-.4 0-.7.3-.8.7z"/><path d="M19.6 8.2c.9.9 1.3 2.2 1 3.9-.6 3.8-3.1 5.3-6.5 5.3h-1.3c-.4 0-.7.3-.8.7l-.7 4.4h-2.9" opacity=".6"/></svg>Donate with PayPal</a>
-      <p class="note">Any amount helps. Thank you!</p>
+  <section id="support" class="on-ink"><div class="wrap support rise">
+    <h2 class="head">Help keep FreeRope updated.</h2>
+    <div class="cost">
+      <div><b>$99</b><span>a year keeps FreeRope on Apple’s App Store</span></div>
+      <div><b>$0</b><span>what FreeRope costs you, now and later</span></div>
+    </div>
+    <div class="support-foot">
+      <a class="btn primary" href="https://www.paypal.com/donate/?business=ramonmm3%40gmail.com&amp;item_name=Keep+FreeRope+updated&amp;currency_code=USD" target="_blank" rel="noopener">Donate with PayPal</a>
+      <p>FreeRope is free and stays free. If it earns a spot in your routine, a small tip covers Apple’s yearly fee and the time that goes into new features and fixes. Any amount helps. Thank you!</p>
     </div>
   </div></section>
 
-  <section class="reveal"><div class="wrap">
-    <h2 class="sec-title">Questions</h2>
-    <div class="faq" style="margin-top:32px">
-      <details><summary>Is it really free?</summary><p>Yes. No ads, no account, no subscription. It's a side project shared with r/jumprope.</p></details>
-      <details><summary>Which handles work?</summary><p>Crossrope AMP handles (the smart handles that count jumps). FreeRope talks to the handle directly, so you don't need the Crossrope app or a membership. Non-AMP Crossrope handles have no sensor to count with, but the demo mode still lets you look around.</p></details>
-      <details><summary>Is the iPhone version a real app?</summary><p>Yes. It's a native iPhone app installed through TestFlight, Apple's official beta-testing app. Each TestFlight build lasts 90 days and new builds install automatically, so you just keep using it. The next step is the App Store itself.</p></details>
-      <details><summary>Why isn't it in the App Store or Play Store?</summary><p>Publishing to the stores costs $99 a year for Apple and $25 once for Google. Sharing it directly keeps it free for now. On Android you install the app file yourself; on iPhone it comes through TestFlight, Apple's beta-testing app. If enough people <a href="#support">chip in</a>, FreeRope goes into both stores.</p></details>
-      <details><summary>Is it safe to install?</summary><p>Android shows the same warning for every app that doesn't come from the Play Store. FreeRope only asks for Bluetooth (to talk to your handle) and internet (only to check this site for updates). It has no account, no tracking, and your workouts never leave your phone.</p></details>
-      <details><summary>How are calories calculated?</summary><p>From published jump rope oxygen-uptake studies and the 2024 Compendium of Physical Activities, scaled to your height, weight, age and sex. FreeRope adds the physical work of turning your rope, so heavier ropes count for more: about 11% more for a 1 lb rope than a ¼ lb one for an average adult. It's still an estimate (±10–15%), like any app without a heart-rate strap.</p></details>
+  <section id="questions"><div class="wrap faq-grid">
+    <h2 class="head rise">Questions</h2>
+    <div class="faq rise">
+      <details><summary>Is it really free?</summary><p>Yes. No ads, no account, no subscription. It’s a side project shared with r/jumprope.</p></details>
+      <details><summary>Which handles work?</summary><p>Crossrope AMP handles (the smart handles that count jumps). FreeRope talks to the handle directly, so you don’t need the Crossrope app or a membership. Non-AMP Crossrope handles have no sensor to count with, but the demo mode still lets you look around.</p></details>
+      <details><summary>Is the iPhone version a real app?</summary><p>Yes. It’s a native iPhone app installed through TestFlight, Apple’s official beta-testing app. Each TestFlight build lasts 90 days and new builds install automatically, so you just keep using it. The next step is the App Store itself.</p></details>
+      <details><summary>Is it on Google Play?</summary><p>Soon. FreeRope is coming to Google Play. Until then, install the app file from this page, and FreeRope tells you when an update is out.</p></details>
+      <details><summary>Is it safe to install?</summary><p>Android shows the same warning for every app that doesn’t come from the Play Store. FreeRope only asks for Bluetooth (to talk to your handle) and internet (only to check this site for updates). It has no account, no tracking, and your workouts never leave your phone.</p></details>
+      <details><summary>How are calories calculated?</summary><p>From published jump rope oxygen-uptake studies and the 2024 Compendium of Physical Activities, scaled to your height, weight, age and sex. FreeRope adds the physical work of turning your rope, so heavier ropes count for more: about 11% more for a 1 lb rope than a ¼ lb one for an average adult. It’s still an estimate (±10 to 15%), like any app without a heart-rate strap.</p></details>
       <details><summary>Will I lose my workouts when I update?</summary><p>No. Install the new FreeRope.apk over the old one and everything stays. On iPhone, TestFlight updates keep your workouts too. One exception: 1.5.1 moved to FreeRope&rsquo;s own signing key, so if you installed 1.5 on day one, Android will say the update conflicts. Uninstall 1.5 (this clears workouts saved in it), then install 1.5.1. Every update after that installs over the top as usual.</p></details>
-      <details><summary>Is this made by Crossrope?</summary><p>No. FreeRope is an independent fan project and isn't affiliated with or endorsed by Crossrope. Crossrope and AMP are their trademarks.</p></details>
+      <details><summary>Is this made by Crossrope?</summary><p>No. FreeRope is an independent fan project and isn’t affiliated with or endorsed by Crossrope. Crossrope and AMP are their trademarks.</p></details>
     </div>
   </div></section>
 
-  <footer><div class="wrap">FreeRope is an independent project, not affiliated with Crossrope.<br>Made for the r/jumprope community · <a href="https://www.paypal.com/donate/?business=ramonmm3%40gmail.com&amp;item_name=Help+FreeRope+reach+the+App+Store+and+Play+Store&amp;currency_code=USD" target="_blank" rel="noopener">Support FreeRope</a></div></footer>
+  <footer class="on-ink"><div class="wrap foot">
+    <div class="big">FreeRope</div>
+    <div>
+      <p>An independent project, not affiliated with Crossrope. Made for the r/jumprope community.</p>
+      <p style="margin-top:10px"><a href="https://www.paypal.com/donate/?business=ramonmm3%40gmail.com&amp;item_name=Keep+FreeRope+updated&amp;currency_code=USD" target="_blank" rel="noopener">Support FreeRope</a></p>
+    </div>
+  </div></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
   <script>
@@ -280,7 +410,7 @@
     document.getElementById('appUrl').textContent = appUrl.replace(/^https?:\/\//, '');
 
     const cta = document.getElementById('heroCta');
-    const dl = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>';
+    const dl = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>';
     if (platform === 'android') { cta.innerHTML = dl + 'Download for Android'; cta.href = 'FreeRope.apk'; cta.setAttribute('download', ''); }
     else if (platform === 'iphone') { cta.innerHTML = 'Get it on iPhone'; }
     else { cta.innerHTML = 'Get FreeRope'; }
@@ -308,21 +438,138 @@
     }
 
     fetch('version.json', { cache: 'no-store' }).then((r) => r.json()).then((v) => {
-      document.getElementById('apkMeta').textContent = `FreeRope ${v.versionName} · ${v.sizeMb} MB`;
+      document.getElementById('apkMeta').textContent = `FreeRope ${v.versionName}, ${v.sizeMb} MB`;
     }).catch(() => {});
 
-    // Show the video section only once the promo file is there.
+    const still = matchMedia('(prefers-reduced-motion: reduce)');
+
+    // Show the video once the promo file is there; play it only while it's on screen.
     const promo = document.getElementById('promo');
     const showVideo = () => { document.getElementById('video').hidden = false; };
     if (promo.readyState >= 1) showVideo(); else promo.addEventListener('loadedmetadata', showVideo);
+    new IntersectionObserver(([e]) => {
+      if (still.matches) return;
+      if (e.isIntersecting) promo.play().catch(() => {}); else promo.pause();
+    }, { threshold: .5 }).observe(promo);
 
-    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0, rootMargin: '0px 0px -8% 0px' });
-    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
-    // Jumping to #get, printing or a slow device should never leave a section invisible.
-    const revealAll = () => document.querySelectorAll('.reveal').forEach((el) => el.classList.add('in'));
+    // The one reveal.
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px' });
+    document.querySelectorAll('.rise').forEach((el) => io.observe(el));
+    const revealAll = () => document.querySelectorAll('.rise').forEach((el) => el.classList.add('in'));
     if (location.hash) revealAll();
     addEventListener('hashchange', revealAll);
     document.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', revealAll));
+
+    // ---- The rope -------------------------------------------------------------
+    // A rope turning around the axis through the two handles, seen from the front:
+    // phase 0 is over the head, π under the feet. Front half draws over the text,
+    // back half under it, and the text hops while the rope passes beneath.
+    function Rope(stage, jumper, { reach = 1.0, lift = 26, inside = false } = {}) {
+      const back = stage.querySelector('.rope-layer.back path');
+      const front = stage.querySelector('.rope-layer.front path');
+      const hands = stage.querySelectorAll('.rope-layer.front .handle');
+      let g = null;
+      const measure = () => {
+        const hop = jumper.style.transform; jumper.style.transform = '';  // measure on the ground, not mid-hop
+        const s = stage.getBoundingClientRect(), j = jumper.getBoundingClientRect();
+        jumper.style.transform = hop;
+        const pad = Math.min(56, s.width * .06);
+        const mid = j.left + j.width / 2, room = Math.min(mid, document.documentElement.clientWidth - mid) - 14;
+        // inside: the handles stay within the stage (the pad); otherwise they may reach the screen edge
+        const box = Math.min(mid - s.left, s.right - mid) - 18;
+        const hx = Math.max(j.width / 2 + 10, Math.min(inside ? Math.min(room, box) : room, j.width / 2 + pad * 1.6));
+        g = { cx: j.left - s.left + j.width / 2, cy: j.top - s.top + j.height * .42, hx,
+              ry: (j.height / 2 + pad * .9) * reach, hh: Math.max(34, Math.min(70, j.height * .34)) };
+        hands.forEach((h, i) => {
+          const x = g.cx + (i ? g.hx : -g.hx);
+          h.setAttribute('x', x - 7); h.setAttribute('y', g.cy - g.hh * .15); h.setAttribute('width', 14);
+          h.setAttribute('height', g.hh); h.setAttribute('rx', 7);
+        });
+      };
+      const draw = (phase) => {
+        if (!g) measure();
+        // Rope ends sit in the handles; the loop's far point swings top to bottom.
+        const yEnd = g.cy, apex = g.cy - g.ry * Math.cos(phase);
+        const c = yEnd + (apex - yEnd) / .75; // cubic with both controls at c peaks at apex
+        const xl = g.cx - g.hx, xr = g.cx + g.hx, k = g.hx * .18;
+        const d = `M${xl},${yEnd} C${xl - k},${c} ${xr + k},${c} ${xr},${yEnd}`;
+        const inFront = Math.sin(phase) > 0;
+        front.setAttribute('d', inFront ? d : ''); back.setAttribute('d', inFront ? '' : d);
+        // Hop: airborne for the stretch either side of the rope passing underneath.
+        // Airborne from just before the rope reaches the feet (coming round the front) to just after.
+        const off = ((phase % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+        const up = off > -.9 && off < .15 ? Math.sin(((off + .9) / 1.05) * Math.PI) : 0;
+        jumper.style.transform = up ? `translateY(${-up * lift}px)` : '';
+      };
+      addEventListener('resize', () => { g = null; });
+      return { draw, measure };
+    }
+
+    // Hero: turns on its own at 110 jumps a minute and counts.
+    const heroRope = Rope(document.getElementById('heroStage'), document.getElementById('heroJumper'), { lift: 22 });
+    const heroCount = document.getElementById('heroCount');
+    if (still.matches) {
+      heroRope.draw(Math.PI * .62); // a still frame: rope in front, mid-swing
+    } else {
+      const perMs = (110 / 60000) * Math.PI * 2;
+      let t0 = null, jumps = 0, visible = true;
+      new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(document.getElementById('heroStage'));
+      const tick = (t) => {
+        if (t0 === null) t0 = t;
+        if (visible) {
+          const phase = (t - t0) * perMs;
+          const n = Math.floor((phase + Math.PI) / (Math.PI * 2));
+          if (n !== jumps) { jumps = n; heroCount.textContent = jumps.toLocaleString(); }
+          heroRope.draw(phase % (Math.PI * 2));
+        }
+        requestAnimationFrame(tick);
+      };
+      document.fonts.ready.then(() => { heroRope.measure(); requestAnimationFrame(tick); });
+    }
+
+    // The toy: every tap is one turn of the rope.
+    const pad = document.getElementById('pad');
+    const padRope = Rope(pad, document.getElementById('padJumper'), { reach: .95, lift: 30, inside: true });
+    const toyCount = document.getElementById('toyCount'), toyPace = document.getElementById('toyPace');
+    const toyBest = document.getElementById('toyBest'), toyHint = document.getElementById('toyHint');
+    // At rest the rope lies behind, low, like one on the floor behind your heels.
+    const REST = Math.PI * 1.12;
+    let count = 0, streak = 0, best = 0, last = 0, taps = [], phase = REST, target = REST, anim = null;
+    padRope.draw(REST);
+    const turn = () => {
+      if (anim) return;
+      const start = performance.now(), from = phase, dur = still.matches ? 0 : 380;
+      const step = (t) => {
+        const k = dur ? Math.min(1, (t - start) / dur) : 1;
+        phase = from + (target - from) * (1 - Math.pow(1 - k, 2));
+        padRope.draw(phase % (Math.PI * 2));
+        if (k < 1) anim = requestAnimationFrame(step); else { anim = null; if (target > phase + .01) turn(); }
+      };
+      anim = requestAnimationFrame(step);
+    };
+    const jump = () => {
+      const now = performance.now();
+      streak = now - last < 1600 ? streak + 1 : 1; last = now;
+      best = Math.max(best, streak); count++;
+      taps = taps.filter((x) => now - x < 6000); taps.push(now);
+      const pace = taps.length > 2 ? Math.round((taps.length - 1) / ((now - taps[0]) / 60000)) : 0;
+      toyCount.textContent = count; toyPace.textContent = pace; toyBest.textContent = best;
+      if (count === 20) toyHint.textContent = 'Twenty in. Now picture that through a whole Tabata.';
+      if (count === 100) toyHint.textContent = 'A hundred taps. Your thumb has earned a rope.';
+      if (String(count).length !== String(count - 1).length) padRope.measure();
+      // at most two turns queued, always ending at rest
+      const TAU = Math.PI * 2, nextRest = REST + TAU * Math.ceil((phase - REST) / TAU - 1e-6);
+      target = Math.min(target + TAU, nextRest + 2 * TAU); turn();
+    };
+    pad.addEventListener('pointerdown', (e) => { e.preventDefault(); jump(); });
+    pad.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); jump(); } });
+    addEventListener('keydown', (e) => {
+      if (e.key !== ' ' || e.target !== document.body) return;
+      const r = pad.getBoundingClientRect();
+      if (r.top < innerHeight * .8 && r.bottom > innerHeight * .2) { e.preventDefault(); jump(); }
+    });
+    addEventListener('resize', () => requestAnimationFrame(() => padRope.draw(phase % (Math.PI * 2))));
+    document.fonts.ready.then(() => { padRope.measure(); padRope.draw(phase % (Math.PI * 2)); });
   </script>
 </body>
 </html>
