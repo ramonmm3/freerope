@@ -1,6 +1,6 @@
 // Offline shell: serve cached files first, refresh them in the background.
-const CACHE = 'freerope-web-1.5.5';
-const FILES = ['./', 'index.html', 'app.css', 'app.js', 'energy.js', 'handle.js', 'engine.js', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'manifest.webmanifest'];
+const CACHE = 'freerope-web-1.6.1';
+const FILES = ['./', 'index.html', 'app.css', 'app.js', 'energy.js', 'handle.js', 'engine.js', 'account.js', 'config.js', 'vendor/supabase.js', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
