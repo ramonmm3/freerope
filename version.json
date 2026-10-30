@@ -1,7 +1,7 @@
 {
-  "versionCode": 6,
-  "versionName": "1.5.1",
-  "sizeMb": 2.8,
-  "notes": "FreeRope now has its own signing key. If Android says the update conflicts, uninstall 1.5 first (this clears its workouts), then install this. Sorry, this is a one-time step.",
+  "versionCode": 7,
+  "versionName": "1.6.0",
+  "sizeMb": 3.0,
+  "notes": "New: a global leaderboard. Sign in (optional) to post your jumps and see where you rank today, this week and all time.",
   "url": "https://ramonmm3.github.io/freerope/#get"
 }
