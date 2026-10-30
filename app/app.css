@@ -191,9 +191,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .live-rounds { display: flex; gap: 4px; max-width: 420px !important; margin-top: 4px; }
 .live-rounds i { flex: 1; height: 4px; border-radius: 2px; background: var(--fill3); transition: background .4s; }
 .live-mid { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
-.ring-wrap { position: relative; height: min(100%, 420px); max-width: 82%; aspect-ratio: 1; padding: 6px 0; }
 .live-mid { container-type: size; }
-.ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+/* An explicit square (no percentage heights): iOS Safari sized the old one differently, so the ring sat above its number. */
+.ring-wrap { position: relative; flex: none; width: min(82%, 420px, 42vh); aspect-ratio: 1; }
+@supports (width: 1cqh) { .ring-wrap { width: min(82cqw, 420px, calc(100cqh - 12px)); } }
+.ringSvg { position: absolute; inset: 0; }
+.ring-wrap svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
 .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .rest-label { font-size: 20px; font-weight: 600; color: var(--purple); }
 .big { font-size: min(96px, 24vw, 22cqh); font-weight: 800; letter-spacing: -2.4px; line-height: 1.05; }
