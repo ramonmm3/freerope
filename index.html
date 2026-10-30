@@ -93,7 +93,7 @@
     .lead { font-size: clamp(18px, 1.6vw, 21px); max-width: 34ch; font-weight: 500; }
     .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
     .tally { text-align: right; }
-    .tally b { display: block; font: 800 clamp(40px, 5vw, 64px)/1 var(--font-display); font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
+    .tally b { display: block; font: 800 clamp(40px, 5vw, 64px)/1 var(--font-display); font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
     .tally span { color: var(--on-lime-soft); font-size: 15px; }
 
     /* Ink sections */
@@ -116,10 +116,10 @@
     .toy { background: var(--paper); }
     .toy-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap:  48px var(--col-gap); align-items: center; }
     .pad { position: relative; aspect-ratio: 4 / 3; border-radius: var(--r-lg); background: var(--lime); display: grid; place-items: center; overflow: hidden; touch-action: manipulation; cursor: pointer; user-select: none; -webkit-user-select: none; }
-    .pad .jumper b { display: block; font: 800 clamp(72px, 12vw, 160px)/1 var(--font-display); font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
+    .pad .jumper b { display: block; min-width: 2.2em; font: 800 clamp(72px, 10vw, 150px)/1 var(--font-display); font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
     .pad .jumper span { font-weight: 600; }
     .pad-read { display: flex; gap: 36px; margin-top: 28px; }
-    .pad-read b { display: block; font: 800 34px/1 var(--font-display); font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
+    .pad-read b { display: block; font: 800 34px/1 var(--font-display); font-variation-settings: "opsz" 32; letter-spacing: -.04em; }
     .pad-read span { font-size: 15px; color: var(--on-lime-soft); }
     .pad-hint { margin-top: 20px; min-height: 1.5em; font-weight: 500; }
 
@@ -464,16 +464,20 @@
     // A rope turning around the axis through the two handles, seen from the front:
     // phase 0 is over the head, π under the feet. Front half draws over the text,
     // back half under it, and the text hops while the rope passes beneath.
-    function Rope(stage, jumper, { reach = 1.0, lift = 26 } = {}) {
+    function Rope(stage, jumper, { reach = 1.0, lift = 26, inside = false } = {}) {
       const back = stage.querySelector('.rope-layer.back path');
       const front = stage.querySelector('.rope-layer.front path');
       const hands = stage.querySelectorAll('.rope-layer.front .handle');
       let g = null;
       const measure = () => {
+        const hop = jumper.style.transform; jumper.style.transform = '';  // measure on the ground, not mid-hop
         const s = stage.getBoundingClientRect(), j = jumper.getBoundingClientRect();
+        jumper.style.transform = hop;
         const pad = Math.min(56, s.width * .06);
         const mid = j.left + j.width / 2, room = Math.min(mid, document.documentElement.clientWidth - mid) - 14;
-        const hx = Math.min(room, j.width / 2 + pad * 1.6);
+        // inside: the handles stay within the stage (the pad); otherwise they may reach the screen edge
+        const box = Math.min(mid - s.left, s.right - mid) - 18;
+        const hx = Math.max(j.width / 2 + 10, Math.min(inside ? Math.min(room, box) : room, j.width / 2 + pad * 1.6));
         g = { cx: j.left - s.left + j.width / 2, cy: j.top - s.top + j.height * .42, hx,
               ry: (j.height / 2 + pad * .9) * reach, hh: Math.max(34, Math.min(70, j.height * .34)) };
         hands.forEach((h, i) => {
@@ -492,8 +496,9 @@
         const inFront = Math.sin(phase) > 0;
         front.setAttribute('d', inFront ? d : ''); back.setAttribute('d', inFront ? '' : d);
         // Hop: airborne for the stretch either side of the rope passing underneath.
-        const near = Math.cos(phase - Math.PI); // 1 when the rope is under the feet
-        const up = near > .35 ? Math.sin(((near - .35) / .65) * Math.PI / 2) : 0;
+        // Airborne from just before the rope reaches the feet (coming round the front) to just after.
+        const off = ((phase % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+        const up = off > -.9 && off < .15 ? Math.sin(((off + .9) / 1.05) * Math.PI) : 0;
         jumper.style.transform = up ? `translateY(${-up * lift}px)` : '';
       };
       addEventListener('resize', () => { g = null; });
@@ -524,11 +529,11 @@
 
     // The toy: every tap is one turn of the rope.
     const pad = document.getElementById('pad');
-    const padRope = Rope(pad, document.getElementById('padJumper'), { reach: .95, lift: 30 });
+    const padRope = Rope(pad, document.getElementById('padJumper'), { reach: .95, lift: 30, inside: true });
     const toyCount = document.getElementById('toyCount'), toyPace = document.getElementById('toyPace');
     const toyBest = document.getElementById('toyBest'), toyHint = document.getElementById('toyHint');
-    // At rest the rope hangs behind, low, like one lying behind your heels.
-    const REST = Math.PI * 1.45;
+    // At rest the rope lies behind, low, like one on the floor behind your heels.
+    const REST = Math.PI * 1.12;
     let count = 0, streak = 0, best = 0, last = 0, taps = [], phase = REST, target = REST, anim = null;
     padRope.draw(REST);
     const turn = () => {
@@ -551,7 +556,10 @@
       toyCount.textContent = count; toyPace.textContent = pace; toyBest.textContent = best;
       if (count === 20) toyHint.textContent = 'Twenty in. Now picture that through a whole Tabata.';
       if (count === 100) toyHint.textContent = 'A hundred taps. Your thumb has earned a rope.';
-      target += Math.PI * 2; turn();
+      if (String(count).length !== String(count - 1).length) padRope.measure();
+      // at most two turns queued, always ending at rest
+      const TAU = Math.PI * 2, nextRest = REST + TAU * Math.ceil((phase - REST) / TAU - 1e-6);
+      target = Math.min(target + TAU, nextRest + 2 * TAU); turn();
     };
     pad.addEventListener('pointerdown', (e) => { e.preventDefault(); jump(); });
     pad.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); jump(); } });
