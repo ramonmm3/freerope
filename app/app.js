@@ -979,17 +979,37 @@ function blockedSheet() {
 }
 
 function deleteAccountSheet() {
-  openSheet(`<h3>Delete your account?</h3>
-    <div class="sub">This removes your username and every workout summary from the leaderboard, for good. Workouts saved on this device stay here.</div>
-    <button class="btn red press" data-sheet="yes">Delete Account</button>
-    <button class="btn gray press" style="margin-top:10px" data-sheet="no">Cancel</button>`, (sh) => {
-    sh.querySelector('[data-sheet="no"]').onclick = () => closeSheet();
-    sh.querySelector('[data-sheet="yes"]').onclick = async (e) => {
-      e.target.textContent = 'Deleting…'; e.target.disabled = true;
+  const sheet = openSheet('<div class="del"></div>');
+  const box = sheet.querySelector('.del');
+  // Two steps on purpose: a plain warning, then typing DELETE, so nobody loses an account to a stray tap.
+  box.innerHTML = `<div class="auth-hero" style="background:var(--red)">${icon('trash')}</div>
+    <h3>Delete your account?</h3>
+    <div class="sub">This permanently deletes, for everyone and for good:</div>
+    <div class="group" style="text-align:left">
+      <div class="row-item"><span class="title">Your username <b>${esc(account.profile?.username || '')}</b></span></div>
+      <div class="row-item"><span class="title">Every workout summary on the leaderboard</span></div>
+      <div class="row-item"><span class="title">Your places on every board</span></div>
+    </div>
+    <div class="sub" style="margin-top:12px">There’s no undo and we can’t restore it. Workouts saved on this device stay here.</div>
+    <button class="btn red press" data-sheet="next">Continue</button>
+    <button class="btn gray press" style="margin-top:10px" data-sheet="no">Keep My Account</button>`;
+  box.querySelector('[data-sheet="no"]').onclick = () => closeSheet();
+  box.querySelector('[data-sheet="next"]').onclick = () => {
+    box.innerHTML = `<h3>Type DELETE to confirm</h3>
+      <div class="sub">Your account will be deleted right away.</div>
+      <input class="field" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="DELETE" aria-label="Type DELETE to confirm">
+      <button class="btn red press" style="margin-top:16px" data-sheet="yes" disabled>Delete My Account</button>
+      <button class="btn gray press" style="margin-top:10px" data-sheet="no">Cancel</button>`;
+    const input = box.querySelector('input'), yes = box.querySelector('[data-sheet="yes"]');
+    setTimeout(() => input.focus(), 50);
+    input.oninput = () => { yes.disabled = input.value.trim().toUpperCase() !== 'DELETE'; };
+    box.querySelector('[data-sheet="no"]').onclick = () => closeSheet();
+    yes.onclick = async () => {
+      yes.textContent = 'Deleting…'; yes.disabled = true; input.disabled = true;
       try { await account.deleteAccount(); closeSheet(); lb.cache = {}; toast('Your account was deleted'); }
       catch (err) { toast(friendlyError(err) || 'Couldn’t delete the account. Try again.'); closeSheet(); }
     };
-  });
+  };
 }
 
 // ================================================================= onboarding
