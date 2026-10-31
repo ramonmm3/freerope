@@ -18,6 +18,9 @@ const defaultProfile = {
 };
 let profile = { ...defaultProfile, ...store.get('freerope.profile', {}) };
 let sessions = store.get('freerope.sessions', []);
+// Leaderboard names this jumper blocked: hidden from their boards on this device ({ id, name }).
+let blocked = store.get('freerope.blocked', []);
+const isBlocked = (id) => blocked.some((b) => b.id === id);
 
 function updateProfile(patch) {
   profile = { ...profile, ...patch };
@@ -507,7 +510,7 @@ function renderProfile() {
     <div class="group-footer">Bugs, ideas, a jump count that looked off: it all goes straight to Ramón.</div>
     ${NATIVE ? '' : `<div class="group" style="margin-top:22px"><a class="row-item" href="${DONATE}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="tile" style="background:var(--pink)">${icon('heart')}</div><span class="title">Support FreeRope</span><span class="value">PayPal</span></a></div>
     <div class="group-footer">FreeRope costs nothing. Tips pay for the App Store ($99/year) and Play Store ($25) so it can be published properly and keep improving.</div>`}
-    <p class="center small muted" style="margin-top:28px;line-height:1.5">FreeRope ${NATIVE ? 'for iPhone' : 'for Web'} 1.5<br>Works with Crossrope AMP handles. Not affiliated with Crossrope.<br>${account.state === 'ready' ? 'Your workouts are saved on this device and summarised to your account for the leaderboard.' : `Your workouts are stored only ${NATIVE ? 'on this phone' : 'in this browser'}.`}</p>
+    <p class="center small muted" style="margin-top:28px;line-height:1.5">FreeRope ${NATIVE ? 'for iPhone' : 'for Web'} 1.6<br>Works with Crossrope AMP handles. Not affiliated with Crossrope.<br>${account.state === 'ready' ? 'Your workouts are saved on this device and summarised to your account for the leaderboard.' : `Your workouts are stored only ${NATIVE ? 'on this phone' : 'in this browser'}.`}</p>
   </div></div>`;
 }
 
@@ -641,7 +644,7 @@ function renderLeaders() {
   const m = METRICS[lb.metric];
   const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
   const right = `<button class="iconbtn press" data-act="lbRefresh" aria-label="Refresh">${icon('refresh')}</button>`;
-  const rows = lb.rows || [];
+  const rows = (lb.rows || []).filter((r) => !isBlocked(r.user_id));
   const me = rows.find((r) => r.is_me);
   const top = rows.filter((r) => r.rank <= 3).slice(0, 3);
   const rest = rows.filter((r) => !top.includes(r));
@@ -720,7 +723,13 @@ function playerSheet(r) {
     <h3>${esc(r.username)}</h3>
     <div class="sub">#${r.rank} ${PERIODS.find(([k]) => k === lb.period)[1].toLowerCase()}</div>
     <div class="card center" style="background:var(--grouped2)"><div class="num" style="font-size:40px;font-weight:800;color:${m.color}">${fmt(r.value)}</div><div class="muted">${m.unit} ${{ day: 'today', week: 'this week', all: 'all time' }[lb.period]}</div></div>
-    ${canReport ? '<button class="btn red press" style="margin-top:16px" data-sheet="report">Report Name</button><p class="center small muted" style="margin:10px 0 0">Report names that are offensive or impersonate someone.</p>' : ''}`, (sh) => {
+    ${canReport ? '<button class="btn red press" style="margin-top:16px" data-sheet="report">Report Name</button><p class="center small muted" style="margin:10px 0 0">Report names that are offensive or impersonate someone.</p>' : ''}
+    ${!r.is_me ? '<button class="btn gray press" style="margin-top:12px" data-sheet="block">Block</button><p class="center small muted" style="margin:10px 0 0">Hide this name from your leaderboard. You can undo it in Profile.</p>' : ''}`, (sh) => {
+    sh.querySelector('[data-sheet="block"]')?.addEventListener('click', () => {
+      if (!confirm(`Block “${r.username}”? You won’t see them on your leaderboard.`)) return;
+      blocked = [...blocked.filter((b) => b.id !== r.user_id), { id: r.user_id, name: r.username }];
+      store.set('freerope.blocked', blocked); closeSheet(); render(); toast(`${r.username} is blocked`);
+    });
     sh.querySelector('[data-sheet="report"]')?.addEventListener('click', async () => {
       if (!confirm(`Report “${r.username}” as offensive or impersonating someone?`)) return;
       try { await account.report(r.user_id); closeSheet(); toast('Thanks. We’ll take a look.'); } catch (e) { toast(friendlyError(e) || 'Couldn’t send the report.'); }
@@ -736,7 +745,7 @@ function accountGroup() {
   if (s === 'loading') return `<div class="group-header">Account</div><div class="group"><div class="row-item"><span class="title muted">Loading…</span></div></div>`;
   if (s === 'signedOut') {
     return `<div class="group-header">Account</div>
-      <div class="group"><button class="row-item" data-act="signin"><div class="tile" style="background:var(--yellow)">${icon('trophy').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Sign In</span><span class="value">Join the leaderboard</span>${icon('chevR', 'chev')}</button></div>
+      <div class="group"><button class="row-item" data-act="signin"><div class="tile" style="background:var(--yellow)">${icon('trophy').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Sign In</span><span class="value">Join the leaderboard</span>${icon('chevR', 'chev')}</button>${blockedRow()}</div>
       <div class="group-footer">Use Apple, Google or your email. Your workouts stay on this device either way; signing in adds a summary of each one to the leaderboard.</div>`;
   }
   if (s === 'needsName') {
@@ -752,6 +761,7 @@ function accountGroup() {
     <div class="group" style="margin-top:12px">
       <button class="row-item" data-act="editName"><div class="tile" style="background:var(--accent)">${icon('person').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Username</span><span class="value">${esc(p.username)}</span>${icon('chevR', 'chev')}</button>
       <button class="row-item" data-act="tab" data-arg="leaders"><div class="tile" style="background:var(--yellow)">${icon('trophy').replace('<svg', '<svg style="color:#000"')}</div><span class="title">Leaderboard</span>${icon('chevR', 'chev')}</button>
+      ${blockedRow()}
     </div>
     <div class="group" style="margin-top:12px">
       <button class="row-item plain" data-act="signout"><span class="title" style="color:var(--accent)">Sign Out</span></button>
@@ -759,6 +769,8 @@ function accountGroup() {
     </div>
     <div class="group-footer">Your username and a summary of each workout (jumps, time, pace) are stored with your account for the leaderboard.</div>`;
 }
+
+const blockedRow = () => blocked.length ? `<button class="row-item" data-act="blocked"><span class="title">Blocked Names</span><span class="value">${blocked.length}</span>${icon('chevR', 'chev')}</button>` : '';
 
 /** One sheet for every way in: Apple, Google, or a 6-digit code by email. */
 function signInSheet() {
@@ -950,6 +962,19 @@ function feedbackSheet() {
       btn.disabled = false; btn.textContent = 'Send';
       show(/rate_limited/.test(e?.message) ? 'You’ve sent a lot in the last hour. Try again later.' : friendlyError(e) || 'Couldn’t send it. Try again.');
     }
+  });
+}
+
+function blockedSheet() {
+  const draw = () => `<h3>Blocked names</h3>
+    <div class="sub">They’re hidden from your leaderboard on this device.</div>
+    <div class="group">${blocked.map((b) => `<div class="row-item"><span class="title">${esc(b.name)}</span><button class="btn gray press" style="width:auto;padding:6px 14px;margin:0" data-unblock="${esc(b.id)}">Unblock</button></div>`).join('')}</div>`;
+  const sheet = openSheet(draw());
+  sheet.addEventListener('click', (e) => {
+    const id = e.target.closest('[data-unblock]')?.dataset.unblock;
+    if (!id) return;
+    blocked = blocked.filter((b) => b.id !== id); store.set('freerope.blocked', blocked); render();
+    if (!blocked.length) closeSheet(); else sheet.innerHTML = `<div class="grabber"></div>${draw()}`;
   });
 }
 
@@ -1328,6 +1353,7 @@ app.addEventListener('click', (e) => {
     case 'editName': nameSheet(); break;
     case 'signout': account.signOut().then(() => { lb.cache = {}; toast('Signed out'); }); break;
     case 'deleteAccount': deleteAccountSheet(); break;
+    case 'blocked': blockedSheet(); break;
     case 'lbPeriod': lb.period = arg; loadBoard(); break;
     case 'lbMetric': lb.metric = arg; loadBoard(); break;
     case 'lbRefresh': loadBoard(true); break;
