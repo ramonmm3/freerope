@@ -1,7 +1,7 @@
 {
-  "versionCode": 7,
-  "versionName": "1.6.0",
+  "versionCode": 8,
+  "versionName": "1.6.1",
   "sizeMb": 3.0,
-  "notes": "New: a global leaderboard. Sign in (optional) to post your jumps and see where you rank today, this week and all time.",
+  "notes": "Deleting your account now warns you first and asks you to type DELETE. Tap a name on the leaderboard to report it.",
   "url": "https://ramonmm3.github.io/freerope/#get"
 }
