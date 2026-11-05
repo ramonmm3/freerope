@@ -931,7 +931,7 @@ function nameSheet() {
   paint();
 }
 
-const APP_VERSION = '1.6';
+const APP_VERSION = '1.6.1';
 
 /** "Send Feedback": a message (and an optional email for a reply) to the developer. */
 function feedbackSheet() {
@@ -1050,9 +1050,42 @@ function openSheet(html, onBind) {
   sheet.innerHTML = `<div class="grabber"></div>${html}`;
   document.body.append(scrim, sheet);
   scrim.addEventListener('click', () => closeSheet());
+  swipeToClose(sheet, scrim);
   requestAnimationFrame(() => { scrim.classList.add('show'); sheet.classList.add('show'); });
   onBind?.(sheet);
   return sheet;
+}
+// Drag a sheet down to dismiss it, like iOS sheets. Only starts when the sheet
+// is scrolled to the top, so scrolling a long sheet still works.
+function swipeToClose(sheet, scrim) {
+  let startY = 0, startT = 0, dy = 0, drag = false, armed = false;
+  sheet.addEventListener('touchstart', (e) => {
+    armed = e.touches.length === 1 && sheet.scrollTop <= 0 && !e.target.closest('input, textarea, select');
+    drag = false; dy = 0;
+    startY = e.touches[0].clientY; startT = e.timeStamp;
+  }, { passive: true });
+  sheet.addEventListener('touchmove', (e) => {
+    if (!armed) return;
+    dy = e.touches[0].clientY - startY;
+    if (!drag) {
+      if (dy < 4) { if (dy < -4) armed = false; return; }
+      drag = true;
+      sheet.style.transition = scrim.style.transition = 'none';
+    }
+    e.preventDefault();
+    dy = Math.max(0, dy);
+    sheet.style.transform = `translateY(${dy}px)`;
+    scrim.style.opacity = 1 - Math.min(1, dy / sheet.offsetHeight);
+  }, { passive: false });
+  const end = (e) => {
+    if (!drag) return;
+    drag = armed = false;
+    const fast = dy / Math.max(1, e.timeStamp - startT) > 0.5;
+    sheet.style.transition = scrim.style.transition = sheet.style.transform = scrim.style.opacity = '';
+    if (dy > Math.min(140, sheet.offsetHeight / 3) || (fast && dy > 30)) closeSheet();
+  };
+  sheet.addEventListener('touchend', end);
+  sheet.addEventListener('touchcancel', end);
 }
 function closeSheet(instant = false) {
   document.querySelectorAll('.sheet, .scrim').forEach((el) => {
