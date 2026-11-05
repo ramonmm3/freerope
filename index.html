@@ -297,7 +297,7 @@
       </div>
 
       <div class="panel" id="p-android">
-        <a class="btn primary" href="FreeRope.apk" download><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Android</a>
+        <a class="btn primary" href="https://github.com/ramonmm3/freerope/releases/latest/download/FreeRope.apk"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Android</a>
         <p class="meta"><span id="apkMeta">FreeRope.apk</span>, for Android 12 or newer. Coming soon to Google Play.</p>
         <ol class="steps">
           <li><b>Download</b><span>Tap the button above. Your phone may say the file “might be harmful”. That’s the standard warning for any app that isn’t from the Play Store. Tap <i>Download anyway</i>.</span></li>
@@ -370,7 +370,7 @@
 
     const cta = document.getElementById('heroCta');
     const dl = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>';
-    if (platform === 'android') { cta.innerHTML = dl + 'Download for Android'; cta.href = 'FreeRope.apk'; cta.setAttribute('download', ''); }
+    if (platform === 'android') { cta.innerHTML = dl + 'Download for Android'; cta.href = 'https://github.com/ramonmm3/freerope/releases/latest/download/FreeRope.apk'; }
     else if (platform === 'iphone') { cta.innerHTML = 'Get it on iPhone'; }
     else { cta.innerHTML = 'Get FreeRope'; }
 
