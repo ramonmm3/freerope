@@ -150,16 +150,7 @@
     .steps b { display: block; font-size: 18px; margin-bottom: 2px; }
     .steps span { display: block; color: var(--on-lime-soft); }
     .done { margin-top: 8px; color: var(--on-lime-soft); }
-    details.alt { margin-top: 28px; border-top: 2px solid var(--ink); padding-top: 20px; }
-    details.alt > summary { cursor: pointer; font-weight: 600; }
-    details.alt details.alt { border-top-width: 1px; }
     .route { font: 800 22px/1.1 var(--font-display); margin: 28px 0 4px; }
-    .badge { display: inline-block; margin-top: 4px; font: 600 13px/1 var(--font-body); padding: 8px 12px; border-radius: 999px; background: var(--ink); color: var(--lime); }
-    .why { display: block; margin-top: 8px; font-style: italic; }
-    .ic-inline { width: 1.05em; height: 1.05em; vertical-align: -.15em; }
-    .copy { display: flex; align-items: center; gap: 12px; margin-top: 12px; background: var(--paper); border-radius: 12px; padding: 8px 8px 8px 16px; }
-    .copy code { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
-    .copy button { font: 600 14px/1 var(--font-body); background: var(--ink); color: var(--lime); border: 0; border-radius: 999px; padding: 12px 16px; cursor: pointer; }
     .qr { display: flex; flex-wrap: wrap; gap: 28px; align-items: center; }
     #qr { width: 168px; height: 168px; background: var(--paper); padding: 16px; border-radius: var(--r-md); }
     #qr svg { width: 100%; height: 100%; }
@@ -324,32 +315,6 @@
           <li><b>Install</b><span>Tap <i>Get</i>. FreeRope appears on your home screen like any other app.</span></li>
           <li><b>Jump</b><span>Open FreeRope, allow Bluetooth, shake your handle to wake it and tap <i>Connect</i>. The App Store keeps it updated.</span></li>
         </ol>
-        <details class="alt"><summary>Rather not install an app? Use the web version</summary>
-        <h3 class="route">Safari and beacio</h3><p class="badge">Recommended, iOS 26.2 or newer</p>
-        <ol class="steps">
-          <li><b>Get beacio (free)</b><span>It adds Bluetooth to Safari. Open it once and follow its single setup screen: it switches the extension on and asks you to allow it on websites (tap <i>Always Allow</i>).</span>
-            <div style="margin-top:12px"><a class="btn primary" href="https://apps.apple.com/app/id6761301368" target="_blank" rel="noopener">Get beacio</a></div></li>
-          <li><b>Open FreeRope in Safari</b><span>Tap the button below in Safari.</span>
-            <div style="margin-top:12px"><a class="btn quiet" href="app/" target="_blank" rel="noopener">Open FreeRope</a></div></li>
-          <li><b>Add it to your home screen</b><span>Tap <b>Share</b> <svg class="ic-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>, then <b>Add to Home Screen</b>. Switch <b>off</b> “Open as Web App”, then tap <b>Add</b>.</span>
-            <span class="why">That switch matters: with it off, the FreeRope icon opens in Safari, where beacio’s Bluetooth works.</span></li>
-        </ol>
-        <p class="done">That’s it: a FreeRope icon on your home screen. Shake your handle to wake it and tap <i>Connect Handle</i>.</p>
-
-        <h3 class="route">Bluefy</h3><p class="badge">Any iOS version</p>
-        <ol class="steps">
-          <li><b>Get Bluefy (free)</b><span>A browser with Bluetooth built in.</span>
-            <div style="margin-top:12px"><a class="btn quiet" href="https://apps.apple.com/app/id1492822055" target="_blank" rel="noopener">Get Bluefy</a></div></li>
-          <li><b>Open FreeRope in Bluefy</b><span>Once Bluefy is installed, tap this button. Next time, just open Bluefy: FreeRope stays open in its tab.</span>
-            <div style="margin-top:12px"><a class="btn quiet" id="openBluefy" href="#">Open in Bluefy</a></div>
-            <span style="display:block;margin-top:10px;font-size:15px">Button not working? Open Bluefy and paste:</span>
-            <div class="copy"><code id="appUrl"></code><button data-copy="app">Copy</button></div></li>
-        </ol>
-        <details class="alt"><summary>Want a FreeRope icon for Bluefy too? (optional)</summary>
-          <p style="margin-top:12px">Save <a href="app/icon-512.png" target="_blank" rel="noopener">this icon</a> to Photos. In the Shortcuts app tap <b>+</b>, then <b>Open URLs</b>, paste the link below, rename it <b>FreeRope</b>, then use <b>Add to Home Screen</b> and pick the icon.</p>
-          <div class="copy"><code id="bfUrl"></code><button data-copy="bluefy">Copy</button></div>
-        </details>
-        </details>
       </div>
 
       <div class="panel" id="p-computer">
@@ -402,8 +367,6 @@
   <script>
     const ua = navigator.userAgent;
     const platform = /iPhone|iPad|iPod/.test(ua) ? 'iphone' : /Android/.test(ua) ? 'android' : 'computer';
-    const appUrl = location.origin + location.pathname.replace(/index\.html$/, '') + 'app/';
-    document.getElementById('appUrl').textContent = appUrl.replace(/^https?:\/\//, '');
 
     const cta = document.getElementById('heroCta');
     const dl = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>';
@@ -417,16 +380,6 @@
     }
     document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => show(b.dataset.tab)));
     show(platform);
-
-    const bluefyUrl = 'bluefy://open?url=' + appUrl;
-    document.getElementById('bfUrl').textContent = bluefyUrl;
-    document.getElementById('openBluefy').href = bluefyUrl;
-    document.querySelectorAll('.appUrlText').forEach((el) => (el.textContent = appUrl.replace(/^https?:\/\//, '')));
-    document.querySelectorAll('[data-copy]').forEach((btn) => btn.addEventListener('click', async () => {
-      const text = btn.dataset.copy === 'bluefy' ? bluefyUrl : appUrl;
-      try { await navigator.clipboard.writeText(text); btn.textContent = 'Copied'; } catch { btn.textContent = 'Select it'; }
-      setTimeout(() => (btn.textContent = 'Copy'), 1800);
-    }));
 
     if (window.qrcode) {
       const q = qrcode(0, 'M'); q.addData(location.href.split('#')[0]); q.make();
